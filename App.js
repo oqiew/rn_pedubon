@@ -7,17 +7,17 @@
  */
 
 import React from 'react';
-import { View, Text } from 'react-native';
 
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-      <Text>โครงการสร้างเสริมสุขภาวะเด็กและเยาวชน จังหวัดอุบลราชธานี</Text>
-    </View>
-  );
-}
+
+// pages
+import Login from './src/Components/pages/Login';
+import Profile_edit from './src/Components/pages/Profile_edit';
+import HomeScreen from './src/Components/pages/HomeScreen';
+import Main from './src/Components/pages/Main';
+
+
 
 const Stack = createStackNavigator();
 
@@ -29,13 +29,28 @@ function App() {
         headerMode="screen"
         screenOptions={{
           headerTintColor: 'white',
-          headerStyle: { backgroundColor: '#4050b5' }, headerTitleAlign: 'center', headerTitleAllowFontScaling: true
+          headerStyle: { backgroundColor: '#4050b5' }, headerTitleAlign: 'center', headerTitleAllowFontScaling: true,
         }}
       >
         <Stack.Screen
           name="Home"
           component={HomeScreen}
-          options={{ title: 'PEDUbon' }}
+          options={{ title: 'PEDUbon', headerShown: false, }}
+        />
+        <Stack.Screen
+          name="Login"
+          component={Login}
+          options={{ title: 'เข้าสู่ระบบ', headerShown: false, }}
+        />
+        <Stack.Screen
+          name="Profile_edit"
+          component={Profile_edit}
+          options={{ title: 'โปรไฟล์', }}
+        />
+        <Stack.Screen
+          name="Main"
+          component={Main}
+          options={{ title: 'หน้าหลัก', headerShown: false, }}
         />
       </Stack.Navigator>
     </NavigationContainer>
