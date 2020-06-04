@@ -31,6 +31,7 @@ import Loading from '../Loading';
 export class Main extends Component {
   constructor(props) {
     super(props);
+    console.log('current page main')
     this.tbUser = Firebase.firestore().collection('USERS');
     this.tbSocialMap = Firebase.firestore().collection('SOCIAL_MAPS');
     this.state = {
@@ -88,7 +89,8 @@ export class Main extends Component {
     this.setDate = this.setDate.bind(this);
   }
   componentDidMount() {
-    const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
+    const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.props.fetchReducer.user;
+    console.log(Area_ID)
     this.tbSocialMap.where('Area_PID', '==', Area_PID).where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID)
       .where('Area_ID', '==', Area_ID)
       .onSnapshot(this.ListMark);
@@ -534,14 +536,14 @@ export class Main extends Component {
       .doc(id);
     searchRef.get().then(doc => {
       // console.log(this.state.Role)
-      if (this.state.User_ID === doc.data().Informer_ID ||this.state.Role==='admin') {
+      if (this.state.User_ID === doc.data().Informer_ID || this.state.Role === 'admin') {
         if (doc.exists && doc.data().Map_iamge_URL !== '') {
           var desertRef = Firebase.storage().refFromURL(
             doc.data().Map_iamge_URL,
           );
-          desertRef.delete().then(function () { 
-              console.log('delete geomap and image sucess');
-            })
+          desertRef.delete().then(function () {
+            console.log('delete geomap and image sucess');
+          })
             .catch(function (error) {
               console.log(
                 'image No such document! ' + doc.data().areaImageName,
@@ -551,18 +553,18 @@ export class Main extends Component {
           console.log('geomap image  No such document! ' + id);
         }
         Firebase.firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
-            console.log('Document successfully deleted!');
-            this.setState({
-              Geo_map_name: '',
-              Geo_map_type: '',
-              Geo_map_description: '',
-              Informer_ID: '',
-              Create_date: '',
-              Map_iamge_URL: '',
-              status_add: false,
-              edit_ID: '',
-            });
-          })
+          console.log('Document successfully deleted!');
+          this.setState({
+            Geo_map_name: '',
+            Geo_map_type: '',
+            Geo_map_description: '',
+            Informer_ID: '',
+            Create_date: '',
+            Map_iamge_URL: '',
+            status_add: false,
+            edit_ID: '',
+          });
+        })
           .catch(error => {
             console.error('Error removing document: ', error);
           });

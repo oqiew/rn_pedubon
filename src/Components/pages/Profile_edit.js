@@ -59,6 +59,8 @@ class Profile_edit extends Component {
                 this.listDistrict(Province_ID);
                 this.listSub_district(Province_ID, District_ID);
             } else {
+                this.listProvinces();
+                this.listDistrict(0);
                 this.setState({
                     new_user: true
                 })
@@ -90,7 +92,6 @@ class Profile_edit extends Component {
     }
     listDistrict = (pid) => {
         const Districts = [];
-
         data_provinces[pid][1].forEach((doc, i) => {
             Districts.push({
                 Key: i,
@@ -366,10 +367,9 @@ class Profile_edit extends Component {
         //List data
         const { Provinces, Districts, Sub_districts, User_types } = this.state;
         if (this.state.loading) {
-            return <Loading></Loading>
+            return (<Loading></Loading>)
         } else {
             return (
-
                 <ScrollView >
                     <View style={styles.container}>
                         {(this.state.Avatar_URL === '' ?
@@ -399,6 +399,7 @@ class Profile_edit extends Component {
                             onValueChange={str => this.setState({ Sex: str })}>
                             <Picker.Item label="เพศ" value="" />
                             <Picker.Item label="ชาย" value="ชาย" />
+                            <Picker.Item label="หญิง" value="หญิง" />
                             <Picker.Item label="อื่นๆ" value="อื่นๆ" />
 
                         </Picker>
@@ -454,7 +455,7 @@ class Profile_edit extends Component {
                         </Item>
 
                         <Picker
-                            selectedValue={0}
+                            selectedValue={Province_ID}
                             style={{ width: 300 }}
                             onValueChange={this.onSelectProvince.bind(this)}>
                             <Picker.Item key="0" label="จังหวัด" value="" />

@@ -12,10 +12,17 @@ class HomeScreen extends Component {
     super(props);
     this.state = {
       loading: false,
+      page: 'Home'
     };
+
   }
 
-  goTopage() {
+  componentDidMount() {
+    this.goTopage(this);
+  }
+  goTopage = (e) => {
+
+    console.log("start")
     this.setState({
       loading: true,
     });
@@ -41,33 +48,38 @@ class HomeScreen extends Component {
               ...doc.data(),
             });
             if (!this.props.fetchReducer.isFectching) {
-              this.props.navigation.navigate('Main');
+              // this.props.navigation.navigate('Main');
               console.log('Main');
               this.setState({
                 loading: false,
+                page: 'Main'
               });
             }
 
           } else {
             this.props.fetch_user({ User_ID: user.uid });
-            this.props.navigation.navigate('Profile_edit');
-            console.log('Profile_edit');
             this.setState({
               loading: false,
+              page: 'Profile_edit'
             });
+            // this.props.navigation.navigate('Profile_edit');
+            console.log('Profile_edit');
+
           }
         });
       } else {
         this.props.fetch_user({});
-        this.props.navigation.navigate('Login');
-        console.log('Login');
         this.setState({
           loading: false,
         });
+        this.props.navigation.navigate('Login');
+
+
       }
     });
   }
   render() {
+
     if (this.state.loading) {
       return <Loading></Loading>;
     } else {
@@ -84,7 +96,7 @@ class HomeScreen extends Component {
               </Text>
             </View>
             <Button info style={{ margin: 30, justifyContent: 'center', alignItems: 'center', }}
-              onPress={this.goTopage.bind(this)}>
+              onPress={() => this.props.navigation.navigate(this.state.page)}>
               <Text>เข้าสู่ระบบ</Text>
             </Button>
           </Content>

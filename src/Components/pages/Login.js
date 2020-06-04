@@ -6,6 +6,8 @@ import styles from '../../styles/main.styles';
 import Firebase from '../../../Firebase';
 import { fetch_user } from '../../actions';
 import { connect } from 'react-redux';
+import data_provinces from '../../data/provinces.json'
+import { isEmptyValue } from '../Methods';
 export class Login extends Component {
     constructor(props) {
         super(props);
@@ -34,13 +36,13 @@ export class Login extends Component {
             })
         }
     }
-    onLoginButtonPress = () => {
+    onLoginButtonPress = (e) => {
+        e.preventDefault(); .3
         const { Email, Password } = this.state;
 
         this.setState({ loading: true });
         Firebase.auth().signInWithEmailAndPassword(Email, Password)
-            .then(() => {
-
+            .then((user) => {
                 Firebase.firestore().collection('USERS').where("Email", "==", Email).get().then((querySnapshot) => {
                     if (querySnapshot.size === 0) {
                         this.setState({
@@ -55,6 +57,8 @@ export class Login extends Component {
                         });
                         console.log('login to main');
                         querySnapshot.forEach((doc) => {
+                            console.log(doc.data())
+                            const { Province_ID, Sub_district_ID, District_ID, Area_PID, Area_DID, Area_ID, Area_SDID, Birthday } = doc.data();
                             var Ban_name = '';
                             const Province = data_provinces[Province_ID][0];
                             const District = data_provinces[Province_ID][1][District_ID][0];
@@ -69,7 +73,7 @@ export class Login extends Component {
                                 ...doc.data(),
                             });
                         })
-                        this.props.navigation.navigate('Main');
+                        this.props.navigation.navigate('Home');
                     }
                 }
                 );
@@ -80,31 +84,32 @@ export class Login extends Component {
             });
 
     }
+
     componentDidMount() {
 
-        const { navigation } = this.props;
-        this.focusListener = navigation.addListener('willFocus', () => {
-            Firebase.auth().onAuthStateChanged((user) => {
-                if (user) {
-                    Firebase.firestore().collection('USERS').where("Email", "==", user.email).get().then((querySnapshot) => {
-                        if (querySnapshot.size === 0) {
-                            this.setState({
-                                loading: false
-                            });
-                            this.props.navigation.navigate('Profile_edit');
-                        } else {
-                            this.setState({
-                                loading: false
-                            });
-                            this.props.navigation.navigate('Home');
-                        }
-                    }
-                    );
-                } else {
-                    this.props.fetch_user({ User_ID: user.uid })
-                }
-            })
-        });
+        // const { navigation } = this.props;
+        // this.focusListener = navigation.addListener('willFocus', () => {
+        //     Firebase.auth().onAuthStateChanged((user) => {
+        //         if (user) {
+        //             Firebase.firestore().collection('USERS').where("Email", "==", user.email).get().then((querySnapshot) => {
+        //                 if (querySnapshot.size === 0) {
+        //                     this.setState({
+        //                         loading: false
+        //                     });
+        //                     this.props.navigation.navigate('Profile_edit');
+        //                 } else {
+        //                     this.setState({
+        //                         loading: false
+        //                     });
+        //                     this.props.navigation.navigate('Home');
+        //                 }
+        //             }
+        //             );
+        //         } else {
+        //             this.props.fetch_user({ User_ID: user.uid })
+        //         }
+        //     })
+        // });
 
 
     }

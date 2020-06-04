@@ -7,6 +7,7 @@ import { Button, Text, Icon } from 'native-base';
 import { fetch_user } from '../../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../Methods';
+import { CommonActions } from '@react-navigation/native';
 export class Profile extends Component {
   constructor(props) {
     super(props);
@@ -40,9 +41,13 @@ export class Profile extends Component {
     Firebase.auth()
       .signOut()
       .then(response => {
-        this.props.navigation.navigate('Login');
+
+        this.props.navigation.dispatch(CommonActions.reset({ index: 1, routes: [{ name: 'Login' }] }));
+        // this.props.navigation.navigate('Login');
       });
+
     console.log('logout');
+
   };
   render() {
     const {
