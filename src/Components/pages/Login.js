@@ -39,7 +39,7 @@ export class Login extends Component {
     onLoginButtonPress = (e) => {
         e.preventDefault(); .3
         const { Email, Password } = this.state;
-
+        console.log('start login')
         this.setState({ loading: true });
         Firebase.auth().signInWithEmailAndPassword(Email, Password)
             .then((user) => {
@@ -57,7 +57,7 @@ export class Login extends Component {
                         });
                         console.log('login to main');
                         querySnapshot.forEach((doc) => {
-                            console.log(doc.data())
+
                             const { Province_ID, Sub_district_ID, District_ID, Area_PID, Area_DID, Area_ID, Area_SDID, Birthday } = doc.data();
                             var Ban_name = '';
                             const Province = data_provinces[Province_ID][0];

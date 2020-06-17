@@ -22,24 +22,50 @@ class Profile_edit extends Component {
         super(props);
         this.tbUsers = Firebase.firestore().collection('USERS');
 
-        this.state = {
-            ...this.props.fetchReducer.user,
-            //List Data
-            Provinces: [],
-            Districts: [],
-            Sub_districts: [],
+        if (isEmptyValue(this.props.fetchReducer.user.Name)) {
+            this.state = {
+                ...this.props.fetchReducer.user,
+                Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
+                Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
+                Province_ID: '', District_ID: '', Sub_district_ID: '', Avatar_URL: '',
+                Area_ID: '', Role: '', Area_PID: '', Area_DID: '', Area_SDID: '',
+                Province: '', District: '', Sub_district: '', User_type: '', bd: '', Ban_name: '',
+                //List Data
+                Provinces: [],
+                Districts: [],
+                Sub_districts: [],
 
-            //temp date
-            day: '',
-            month: '',
-            year: '',
+                //temp date
+                day: '',
+                month: '',
+                year: '',
 
-            new_user: false,
+                new_user: false,
 
-            loading: false,
-            showBirthday: false,
+                loading: false,
+                showBirthday: false,
+            }
+
+        } else {
+            this.state = {
+                ...this.props.fetchReducer.user,
+                //List Data
+                Provinces: [],
+                Districts: [],
+                Sub_districts: [],
+
+                //temp date
+                day: '',
+                month: '',
+                year: '',
+
+                new_user: false,
+
+                loading: false,
+                showBirthday: false,
+            }
         }
-        console.log(this.state)
+
     }
     authListener() {
         if (!isEmptyValue(this.state.User_ID)) {
@@ -174,26 +200,30 @@ class Profile_edit extends Component {
         this.setState({
             loading: true
         })
+        console.log(this.state)
         const { Name, Last_name, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday, Position, Department,
             Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
             Area_ID, Role, Area_PID, Area_DID, Area_SDID, User_ID,
             Province, District, Sub_district, User_type, bd, Ban_name,
         } = this.state;
-
-        if (Name === '' || Last_name === '' || Nickname === '' || Sex === '' || Phone_number === '' ||
-            Birthday === '' || Position === '' || Department === '' ||
-            Province_ID === '' || District_ID === '' || Sub_district_ID === '' || Email === '' || Avatar_URL === ''
-        ) {
-            Alert.alert("กรุณากรอกข้อมูลให้ครบ");
+        if (isEmptyValue(Avatar_URL)) {
             this.setState({
                 loading: false
             })
+            Alert.alert("กรุณาอัพโหลดรูปภาพของคุณ")
         } else {
+            if (Name === '' || Last_name === '' || Nickname === '' || Sex === '' || Phone_number === '' ||
+                Birthday === '' || Position === '' || Department === '' ||
+                Province_ID === '' || District_ID === '' || Sub_district_ID === '' || Email === '') {
+                Alert.alert("กรุณากรอกข้อมูลให้ครบ");
+                this.setState({
+                    loading: false
+                })
+            } else {
 
-            if (this.state.new_user) {
-                //add data user 
-                if (isEmptyValue(Avatar_URL)) {
+                if (this.state.new_user) {
+                    //add data user 
                     this.tbUsers.doc(this.state.User_ID).set({
                         Name, Last_name, Nickname, Sex, Phone_number,
                         Line_ID, Facebook, Birthday, Position, Department,
@@ -205,11 +235,20 @@ class Profile_edit extends Component {
                             loading: false
                             , showBirthday: false
                         })
+                        const Province = data_provinces[Province_ID][0];
+                        const District = data_provinces[Province_ID][1][District_ID][0];
+                        if (!isEmptyValue(Area_ID)) {
+                            Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
+                        }
+                        const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
+                        var d1 = new Date(Birthday.seconds * 1000);
+                        let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
                         this.props.fetch_user({
+                            User_ID,
                             Name, Last_name, Nickname, Sex, Phone_number,
                             Line_ID, Facebook, Birthday, Position, Department,
                             Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                            Area_ID, Role, Area_PID, Area_DID, Area_SDID, User_ID,
+                            Area_ID, Role, Area_PID, Area_DID, Area_SDID,
                             Province, District, Sub_district, User_type, bd, Ban_name
                         });
                         Alert.alert('บันทึกสำเร็จ');
@@ -221,47 +260,50 @@ class Profile_edit extends Component {
                             Alert.alert('บันทึกไม่สำเร็จ');
                             console.error("Error adding document: ", error);
                         });
+
                 } else {
-                    this.setState({
-                        loading: false
-                    })
-                    Alert.alert("กรุณาอัพโหลดรูปภาพของคุณ")
-                }
 
-
-
-            } else {
-
-                this.tbUsers.doc(this.state.User_ID).update({
-                    Name, Last_name, Nickname, Sex, Phone_number,
-                    Line_ID, Facebook, Birthday, Position, Department,
-                    Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL, Area_PID, Area_DID, Area_SDID,
-                    Add_date: GetCurrentDate("/"), Area_ID, Role,
-                }).then((docRef) => {
-                    this.setState({
-                        loading: false
-                        , showBirthday: false
-                    })
-                    this.props.fetch_user({
+                    this.tbUsers.doc(this.state.User_ID).update({
                         Name, Last_name, Nickname, Sex, Phone_number,
                         Line_ID, Facebook, Birthday, Position, Department,
-                        Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                        Area_ID, Role, Area_PID, Area_DID, Area_SDID, User_ID,
-                        Province, District, Sub_district, User_type, bd, Ban_name
-                    });
-                    Alert.alert("อัพเดตสำเร็จ");
-                })
-                    .catch((error) => {
+                        Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL, Area_PID, Area_DID, Area_SDID,
+                        Add_date: GetCurrentDate("/"), Area_ID, Role,
+                    }).then((docRef) => {
                         this.setState({
                             loading: false
+                            , showBirthday: false
                         })
-                        Alert.alert('อัพเดตไม่สำเร็จ');
-                        console.error("Error adding document: ", error);
-                    });
+                        const Province = data_provinces[Province_ID][0];
+                        const District = data_provinces[Province_ID][1][District_ID][0];
+                        if (!isEmptyValue(Area_ID)) {
+                            Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
+                        }
+                        const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
+                        var d1 = new Date(Birthday.seconds * 1000);
+                        let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
+                        this.props.fetch_user({
+                            User_ID,
+                            Name, Last_name, Nickname, Sex, Phone_number,
+                            Line_ID, Facebook, Birthday, Position, Department,
+                            Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
+                            Area_ID, Role, Area_PID, Area_DID, Area_SDID,
+                            Province, District, Sub_district, User_type, bd, Ban_name
+                        });
+                        Alert.alert("อัพเดตสำเร็จ");
+                    })
+                        .catch((error) => {
+                            this.setState({
+                                loading: false
+                            })
+                            Alert.alert('อัพเดตไม่สำเร็จ');
+                            console.error("Error adding document: ", error);
+                        });
+
+                }
 
             }
-
         }
+
 
     }
     handleChoosePhoto = () => {
@@ -362,7 +404,7 @@ class Profile_edit extends Component {
         const { Name, Last_name, Nickname, Sex, Phone_number,
             Line_ID, Facebook, Birthday, Position, Department,
             Province_ID, District_ID, Sub_district_ID,
-            Role,
+            Role, Avatar_URL
         } = this.state;
         //List data
         const { Provinces, Districts, Sub_districts, User_types } = this.state;
@@ -372,9 +414,9 @@ class Profile_edit extends Component {
             return (
                 <ScrollView >
                     <View style={styles.container}>
-                        {(this.state.Avatar_URL === '' ?
+                        {(isEmptyValue(Avatar_URL) ?
                             <Image source={require('../../assets/user.png')} style={styles.avatar}></Image>
-                            : <Image source={{ uri: this.state.Avatar_URL }} style={styles.avatar}></Image>)}
+                            : <Image source={{ uri: Avatar_URL }} style={styles.avatar}></Image>)}
 
                         <Button style={{ margin: 10 }} onPress={this.handleChoosePhoto.bind(this)}>
                             <Icon name='plus' type="AntDesign" />
@@ -491,7 +533,7 @@ class Profile_edit extends Component {
                                 <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
                                     <Icon name='save' type="AntDesign" />
                                     <Text>บันทึก</Text></Button>
-                                <Button danger style={{ margin: 10 }} onPress={() => this.props.navigation.navigate('Main')}>
+                                <Button danger style={{ margin: 10 }} onPress={() => this.props.navigation.navigate('Home')}>
                                     <Icon name='left' type="AntDesign" />
                                     <Text>กลับ</Text></Button>
                             </View>

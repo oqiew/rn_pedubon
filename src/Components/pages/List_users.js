@@ -115,7 +115,7 @@ export class List_users extends Component {
                     </Content>
                     <Footer >
                         <FooterTab >
-                            <TouchableOpacity onPress={this.clearSearch.bind(this)} style={{ alignItems: 'center', justifyContent: 'center', padding: 5 ,marginLeft:10}} >
+                            <TouchableOpacity onPress={this.clearSearch.bind(this)} style={{ alignItems: 'center', justifyContent: 'center', padding: 5, marginLeft: 10 }} >
                                 <Text style={{ color: '#ffffff' }}>ทั้งหมด</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={this.seleteType.bind(this, 'ผู้บริหาร')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
@@ -124,7 +124,7 @@ export class List_users extends Component {
                             <TouchableOpacity onPress={this.seleteType.bind(this, 'พี่เลี้ยง')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
                                 <Text style={{ color: '#ffffff' }}>พี่เลี้ยง</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity onPress={this.seleteType.bind(this, 'แกนนำเด็ก')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5,marginRight:10 }} >
+                            <TouchableOpacity onPress={this.seleteType.bind(this, 'แกนนำเด็ก')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5, marginRight: 10 }} >
                                 <Text style={{ color: '#ffffff' }}>แกนนำเด็ก</Text>
                             </TouchableOpacity>
                         </FooterTab>

@@ -14,7 +14,7 @@ class HomeScreen extends Component {
       loading: false,
       page: 'Home'
     };
-
+    this.goTopage(this);
   }
 
   componentDidMount() {
@@ -57,7 +57,7 @@ class HomeScreen extends Component {
             }
 
           } else {
-            this.props.fetch_user({ User_ID: user.uid });
+            this.props.fetch_user({ User_ID: user.uid, Email: user.email });
             this.setState({
               loading: false,
               page: 'Profile_edit'
@@ -78,6 +78,15 @@ class HomeScreen extends Component {
       }
     });
   }
+  onLogin = () => {
+
+    if (this.props.fetchReducer.user === [] || isEmptyValue(this.props.fetchReducer.user.User_ID)) {
+      this.props.navigation.navigate('Login');
+    } else {
+      this.props.navigation.navigate(this.state.page)
+    }
+
+  }
   render() {
 
     if (this.state.loading) {
@@ -96,7 +105,7 @@ class HomeScreen extends Component {
               </Text>
             </View>
             <Button info style={{ margin: 30, justifyContent: 'center', alignItems: 'center', }}
-              onPress={() => this.props.navigation.navigate(this.state.page)}>
+              onPress={this.onLogin.bind(this)}>
               <Text>เข้าสู่ระบบ</Text>
             </Button>
           </Content>
