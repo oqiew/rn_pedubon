@@ -20,6 +20,7 @@ import RNFetchBlob from 'react-native-fetch-blob';
 class Profile_edit extends Component {
     constructor(props) {
         super(props);
+        console.log("start profile");
         this.tbUsers = Firebase.firestore().collection('USERS');
 
         if (isEmptyValue(this.props.fetchReducer.user.Name)) {

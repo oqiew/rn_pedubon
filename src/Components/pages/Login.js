@@ -130,7 +130,6 @@ export class Login extends Component {
             })
             .catch(error => {
                 Alert.alert("ตั้งรหัสผ่านใหม่ไม่สำเร็จ กรุณากรอกข้อมูลอีเมลให้ถูกต้อง");
-
             });
     }
     onRegister() {
@@ -150,7 +149,8 @@ export class Login extends Component {
                                 loading: false
                             })
                             this.props.fetch_user({ User_ID: doc.uid, Email })
-                            this.props.navigation.navigate('Profile_edit');
+                            console.log('register success')
+                            this.props.navigation.navigate('Home');
                         }).catch(error => {
                             //can not use email show warnin
                             Alert.alert("บันทึก อีเมลล์ไม่สำเร็จ");
@@ -161,7 +161,6 @@ export class Login extends Component {
                         })
                 }
             }
-
         } else {
             Alert.alert("กรอกข้อมูลไม่ครบ บันทึกไม่สำเร็จ");
             this.setState({
