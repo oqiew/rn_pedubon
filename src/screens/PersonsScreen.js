@@ -1,18 +1,17 @@
 import React, { Component } from 'react'
 import { Text, View, ScrollView, TouchableOpacity, Image } from 'react-native';
-import Firebase from '../../../Firebase';
-import Timeline from 'react-native-timeline-flatlist';
-import Idelete from '../../assets/trash_can.png';
-import Iedit from '../../assets/pencil.png';
-import styles from '../../styles/main.styles';
-import { fetch_user } from '../../actions';
+import styles from '../styles/main.styles';
+import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { isEmptyValue } from '../Methods';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form } from 'native-base';
-export class Persons extends Component {
+import { isEmptyValue } from '../components/Methods';
+import Firebase from '../Firebase';
+import firestore from '@react-native-firebase/firestore';
+
+export class PersonsScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbUserHome = Firebase.firestore().collection('SOCIAL_MAPS');
+        this.tbUserHome = firestore().collection('SOCIAL_MAPS');
         //getl);
         this.state = {
 
@@ -38,7 +37,7 @@ export class Persons extends Component {
     }
     authListener() {
         if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Login');
+            this.props.navigation.navigate('Home');
         } else {
             const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
             this.unsubscribe = this.tbUserHome
@@ -48,11 +47,11 @@ export class Persons extends Component {
         }
     }
     delete(id) {
-        Firebase.firestore().collection('SOCIAL_MAPS').doc(id).get().then((doc) => {
+        this.tbUserHome.doc(id).get().then((doc) => {
             if (doc.exists) {
                 var desertRef = Firebase.storage().refFromURL(doc.data().Map_iamge_URL);
                 desertRef.delete().then(function () {
-                    Firebase.firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
+                    this.tbUserHome.doc(id).delete().then(() => {
                         console.log("delete user and image sucess");
 
                     }).catch((error) => {
@@ -61,9 +60,9 @@ export class Persons extends Component {
                 }).catch(function (error) {
                     console.log("image No such document! ");
                 });
-                Firebase.firestore().collection('PERSON_HISTORYS').where('Person_ID', '==', id).onSnapshot((querySnapshot) => {
+                firestore().collection('PERSON_HISTORYS').where('Person_ID', '==', id).onSnapshot((querySnapshot) => {
                     querySnapshot.forEach((doc) => {
-                        Firebase.firestore().collection('PERSON_HISTORYS').doc(doc.id).delete().then(() => {
+                        firestore().collection('PERSON_HISTORYS').doc(doc.id).delete().then(() => {
                             console.log("delete child sucess");
                         }).catch((error) => {
                             console.error("Error removing child document: ", error);
@@ -79,7 +78,7 @@ export class Persons extends Component {
 
     }
     edit(id) {
-        Firebase.firestore().collection('SOCIAL_MAPS').doc(id).get().then((doc) => {
+        this.tbUserHome.doc(id).get().then((doc) => {
             const { HName, HLastname, HAddress,
                 HAge, HCareer, Geo_map_description, } = doc.data();
             if (HName === '' || HLastname === '' || HAddress === '' ||
@@ -144,7 +143,7 @@ export class Persons extends Component {
 
     }
     goToEdit = (eid, eName) => {
-        this.props.navigation.navigate('Person_historys', { id: eid, name: eName });
+        this.props.navigation.navigate('PersonHistory', { id: eid, name: eName });
 
     }
     onSubmit = (e) => {
@@ -208,14 +207,14 @@ export class Persons extends Component {
                                 <View style={{ margin: 10, width: '20%', textAlign: 'center', flexDirection: 'row' }}>
                                     {element.HName !== undefined ?
                                         <TouchableOpacity onPress={this.goToEdit.bind(this, element.Key, element.HName)}>
-                                            <Image source={require('../../assets/zoom.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Image source={require('../assets/zoom.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                         : <View></View>}
                                     <TouchableOpacity onPress={this.edit.bind(this, element.Key)} >
-                                        <Image source={require('../../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                        <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
-                                        <Image source={require('../../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                        <Image source={require('../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -283,5 +282,5 @@ const mapDispatchToProps = {
     fetch_user,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Persons);
+export default connect(mapStateToProps, mapDispatchToProps)(PersonsScreen);
 

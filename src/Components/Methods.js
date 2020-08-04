@@ -1,4 +1,4 @@
-import Firebase from '../../Firebase';
+import Firebase from '../Firebase';
 export function GetCurrentDate(sp) {
     var today = new Date();
     var dd = today.getDate();

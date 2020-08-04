@@ -16,22 +16,20 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
 // pages
-import Login from './Components/pages/Login';
-import Profile_edit from './Components/pages/Profile_edit';
-import HomeScreen from './Components/pages/HomeScreen';
-import Main from './Components/pages/Main';
-import Profile from './Components/pages/Profile';
-import List_users from './Components/pages/List_users';
-import Select_ban from './Components/pages/Select_ban';
-import Person_historys from './Components/pages/Person_historys';
-import Persons from './Components/pages/Persons';
-import Local_calendars from './Components/pages/Local_calendars';
-import Local_historys from './Components/pages/Local_historys';
-
-
-
+import HomeScreen from './screens/HomeScreen';
+import RegisterScreen from './screens/RegisterScreen';
+import MainScreen from './screens/MainScreen';
+import ProfileScreen from './screens/ProfileScreen';
+import ListUserScreen from './screens/ListUserScreen';
+import ProfileEditScreen from './screens/ProfileEditScreen';
+import MapsScreen from './screens/MapsScreen';
+import SelectBanScreen from './screens/SelectBanScreen';
+import SocialMapsScreen from './screens/SocialMapsScreen';
+import LocalCalendarScreen from './screens/LocalCalendarScreen';
+import LocalHistoryScreen from './screens/LocalHistoryScreen';
+import PersonHistoryScreen from './screens/PersonHistoryScreen';
+import PersonsScreen from './screens/PersonsScreen';
 const Stack = createStackNavigator();
-
 function App() {
     return (
         <NavigationContainer>
@@ -49,60 +47,71 @@ function App() {
                     options={{ title: 'PEDUbon', headerShown: false, }}
                 />
                 <Stack.Screen
-                    name="Login"
-                    component={Login}
-                    options={{ title: 'เข้าสู่ระบบ', headerShown: false, }}
+                    name="Register"
+                    component={RegisterScreen}
+                    options={{ title: 'สมัครสมาชิก', headerShown: false, }}
                 />
-                <Stack.Screen
-                    name="Profile_edit"
-                    component={Profile_edit}
-                    options={{ title: 'โปรไฟล์', headerLeft: null }}
-                />
+
                 <Stack.Screen
                     name="Main"
-                    component={Main}
+                    component={MainScreen}
                     options={{ title: 'หน้าหลัก', headerShown: false, }}
                 />
                 <Stack.Screen
                     name="Profile"
-                    component={Profile}
-                    options={{ title: 'โปรไฟล์', headerLeft: null }}
+                    component={ProfileScreen}
+                    options={{ title: 'โปรไฟล์', headerShown: true, }}
                 />
                 <Stack.Screen
-                    name="List_users"
-                    component={List_users}
-                    options={{ title: 'ทำเนียบ', headerShown: false, }}
+                    name="ListUser"
+                    component={ListUserScreen}
+                    options={{ title: 'ทำเนียบ', headerShown: true }}
                 />
                 <Stack.Screen
-                    name="Select_ban"
-                    component={Select_ban}
-                    options={{ title: 'เลือกหมู่บ้าน', headerLeft: null }}
+                    name="ProfileEdit"
+                    component={ProfileEditScreen}
+                    options={{ title: 'แก้ไขโปรไฟล์', headerShown: true }}
                 />
                 <Stack.Screen
-                    name="Local_calendars"
-                    component={Local_calendars}
-                    options={{ title: 'ปฏิทินชุมชุน', headerLeft: null }}
+                    name="Maps"
+                    component={MapsScreen}
+                    options={{ title: 'แผนที่ข้อมูล', headerShown: true }}
                 />
                 <Stack.Screen
-                    name="Local_historys"
-                    component={Local_historys}
-                    options={{ title: 'ประวัติศาสตร์ชุมชน', headerLeft: null }}
+                    name="SelectBan"
+                    component={SelectBanScreen}
+                    options={{ title: 'เลือกหมู่บ้าน', headerShown: true }}
+                />
+                <Stack.Screen
+                    name="SocialMaps"
+                    component={SocialMapsScreen}
+                    options={{ title: 'เพิ่มข้อมูลชุมชน', headerShown: true }}
+                />
+                <Stack.Screen
+                    name="LocalCalendar"
+                    component={LocalCalendarScreen}
+                    options={{ title: 'ปฏิทินชุมชน', headerShown: true }}
+                />
+                <Stack.Screen
+                    name="LocalHistory"
+                    component={LocalHistoryScreen}
+                    options={{ title: 'ประวัติศาสตร์ชุมชน', headerShown: true }}
                 />
                 <Stack.Screen
                     name="Persons"
-                    component={Persons}
-                    options={{ title: 'ประวัติบุคคลที่น่าสนใจในชุมชน', headerLeft: null }}
+                    component={PersonsScreen}
+                    options={{ title: 'บุคคลที่น่าสนใจ', headerShown: true }}
                 />
                 <Stack.Screen
-                    name="Person_historys"
-                    component={Person_historys}
-                    options={{ title: 'ประวัติบุคคลที่น่าสนใจ', headerLeft: null }}
+                    name="PersonHistory"
+                    component={PersonHistoryScreen}
+                    options={{ title: 'ประวัติบุคคลที่น่าสนใจ', headerShown: true }}
                 />
+
 
 
             </Stack.Navigator>
         </NavigationContainer>
-    );
+    )
 }
-
 export default App;

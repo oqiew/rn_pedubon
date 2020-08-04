@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import { View, TouchableOpacity, Alert } from 'react-native'
-import Firebase from '../../../Firebase';
-import styles from '../../styles/main.styles';
+import Firebase from '../Firebase';
+import styles from '../styles/main.styles';
 import { Icon, Input, Label, Item, Picker, Text, Button, Container, Content } from 'native-base';
-import data_provinces from '../../data/provinces';
-import { fetch_user } from '../../actions';
+import data_provinces from '../data/provinces';
+import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { isEmptyValue } from '../Methods'
-export class Select_ban extends Component {
+import { isEmptyValue } from '../components/Methods';
+import firestore from '@react-native-firebase/firestore';
+export class SelectBanScreen extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -35,7 +36,7 @@ export class Select_ban extends Component {
 
             }
         } else {
-            this.props.navigation.navigate('Login');
+            this.props.navigation.navigate('Home');
         }
     }
     onChange = (e) => {
@@ -181,7 +182,7 @@ export class Select_ban extends Component {
             Area_ID, Role, Area_PID, Area_DID, Area_SDID, } = this.state;
         const Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
 
-        Firebase.firestore().collection('USERS').doc(this.state.User_ID).update({
+        firestore().collection('USERS').doc(this.state.User_ID).update({
             Area_ID, Area_PID, Area_DID, Area_SDID
         }).then((doc) => {
             this.props.fetch_user({
@@ -196,6 +197,7 @@ export class Select_ban extends Component {
             Alert.alert("บันทึกสำเร็จ");
 
         }).catch((error) => {
+            console.log(error)
             Alert.alert("บันทึกไม่สำเร็จ");
 
         })
@@ -210,51 +212,64 @@ export class Select_ban extends Component {
                 <Content>
                     <View style={styles.container}>
                         <Text style={{ textAlign: 'center', margin: 20, fontSize: 30, color: '#0080ff' }}>เลือกหมู่บ้าน</Text>
-                        <Picker
-                            selectedValue={parseInt(Area_PID, 10)}
-                            style={{ height: 50, width: 200 }}
-                            onValueChange={this.onSelectProvince.bind(this)}>
-                            <Picker.Item key="0" label="จังหวัด" value="" />
-                            {Provinces.map((data, i) =>
-                                <Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                            )}
+                        <Item fixedLabel>
+                            <Label>จังหวัด :</Label>
+                            <Picker
+                                selectedValue={parseInt(Area_PID, 10)}
+                                style={{ height: 50, width: 200 }}
+                                onValueChange={this.onSelectProvince.bind(this)}>
+                                <Picker.Item key="0" label="เลือกจังหวัด" value="" />
+                                {Provinces.map((data, i) =>
+                                    <Picker.Item key={i + 1} label={data.value} value={data.Key} />
+                                )}
 
-                        </Picker>
-                        <Picker
-                            selectedValue={parseInt(Area_DID, 10)}
-                            style={{ height: 50, width: 200 }}
-                            onValueChange={this.onSelectDistrict.bind(this)}>
-                            <Picker.Item key="0" label="อำเภอ" value="" />
-                            {Districts.map((data, i) =>
-                                <Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                            )}
-                        </Picker>
-                        <Picker
-                            selectedValue={parseInt(Area_SDID, 10)}
-                            style={{ height: 50, width: 200 }}
-                            onValueChange={this.onSelectSub_district.bind(this)}>
-                            <Picker.Item key="0" label="ตำบล" value="" />
-                            {Sub_districts.map((data, i) =>
-                                <Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                            )}
-                        </Picker>
+                            </Picker>
+                        </Item>
+                        <Item fixedLabel>
+                            <Label>อำเภอ :</Label>
+                            <Picker
+                                selectedValue={parseInt(Area_DID, 10)}
+                                style={{ height: 50, width: 200 }}
+                                onValueChange={this.onSelectDistrict.bind(this)}>
+                                <Picker.Item key="0" label="เลือกอำเภอ" value="" />
+                                {Districts.map((data, i) =>
+                                    <Picker.Item key={i + 1} label={data.value} value={data.Key} />
+                                )}
+                            </Picker>
+                        </Item>
 
-                        <Picker
-                            selectedValue={parseInt(Area_ID, 10)}
-                            style={{ height: 50, width: 200 }}
-                            onValueChange={(itemValue, itemIndex) =>
-                                this.setState({ Area_ID: itemValue })
-                            }>
-                            <Picker.Item key="0" label="บ้าน" value="" />
-                            {Bans.map((data, i) =>
-                                <Picker.Item key={i + 1} label={data.value + " หมู่ที่" + (i + 1)} value={data.Key} />
-                            )}
-                        </Picker>
+                        <Item fixedLabel>
+                            <Label>ตำบล :</Label>
+                            <Picker
+                                selectedValue={parseInt(Area_SDID, 10)}
+                                style={{ height: 50, width: 200 }}
+                                onValueChange={this.onSelectSub_district.bind(this)}>
+                                <Picker.Item key="0" label="เลือกตำบล" value="" />
+                                {Sub_districts.map((data, i) =>
+                                    <Picker.Item key={i + 1} label={data.value} value={data.Key} />
+                                )}
+                            </Picker>
+                        </Item>
+                        <Item fixedLabel>
+                            <Label>บ้าน :</Label>
+                            <Picker
+                                selectedValue={parseInt(Area_ID, 10)}
+                                style={{ height: 50, width: 200 }}
+                                onValueChange={(itemValue, itemIndex) =>
+                                    this.setState({ Area_ID: itemValue })
+                                }>
+                                <Picker.Item key="0" label="เลือกบ้าน" value="" />
+                                {Bans.map((data, i) =>
+                                    <Picker.Item key={i + 1} label={data.value + " หมู่ที่" + (i + 1)} value={data.Key} />
+                                )}
+                            </Picker>
+                        </Item>
+
                         <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
                             <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
                                 <Icon name='save' type="AntDesign" />
                                 <Text>บันทึกข้อมูล</Text></Button>
-                            <Button danger style={{ margin: 10, }} onPress={() => this.props.back(Area_ID, Area_PID, Area_DID, Area_SDID, Ban_name)}>
+                            <Button danger style={{ margin: 10, }} onPress={() => this.props.navigation.goBack()}>
                                 <Icon name='left' type="AntDesign" />
                                 <Text>กลับ</Text>
                             </Button>
@@ -277,4 +292,4 @@ const mapDispatchToProps = {
     fetch_user,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Select_ban);
+export default connect(mapStateToProps, mapDispatchToProps)(SelectBanScreen);

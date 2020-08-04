@@ -1,7 +1,7 @@
 // functions
 import { FETCHING_DATA, FETCHING_DATA_FAILURE, FETCHING_DATA_SUCCESS, } from '../constans'
-import Firebase from '../../Firebase';
-import { isEmptyValue } from '../Components/Methods'
+import Firebase from '../Firebase';
+import { isEmptyValue } from '../components/Methods'
 export const setStageToScuccess = (payload) => ({
     type: FETCHING_DATA_SUCCESS,
     payload

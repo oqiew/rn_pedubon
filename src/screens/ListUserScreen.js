@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
 import { Text, View, ScrollView, TouchableOpacity, Image, BackHandler } from 'react-native';
 import { Container, Content, FooterTab, Footer, Icon, Header, Item, Input, } from 'native-base';
-import firebase from '../../../Firebase';
-import styles from '../../styles/main.styles';
-import Loading from '../Loading';
-import data_provinces from '../../data/provinces.json'
-export class List_users extends Component {
+import Firebase from '../Firebase';
+import styles from '../styles/main.styles';
+
+import data_provinces from '../data/provinces.json'
+import Loading from '../components/Loading';
+import firestore from '@react-native-firebase/firestore';
+export class ListUserScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbUsers = firebase.firestore().collection('USERS');
+        this.tbUsers = firestore().collection('USERS');
         this.state = {
             //get name form id
             Province: '', District: '', Tumbon: '', User_type: '',
@@ -114,18 +116,48 @@ export class List_users extends Component {
                         </ScrollView>
                     </Content>
                     <Footer >
-                        <FooterTab >
+                        <FooterTab style={styles.footer}>
                             <TouchableOpacity onPress={this.clearSearch.bind(this)} style={{ alignItems: 'center', justifyContent: 'center', padding: 5, marginLeft: 10 }} >
-                                <Text style={{ color: '#ffffff' }}>ทั้งหมด</Text>
+                                <Text style={{ color: '#000000' }}>ทั้งหมด</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={this.seleteType.bind(this, 'ผู้บริหาร')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
-                                <Text style={{ color: '#ffffff' }}>ผู้บริหาร</Text>
+                                <Text style={{ color: '#000000' }}>ผู้บริหาร</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={this.seleteType.bind(this, 'พี่เลี้ยง')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
-                                <Text style={{ color: '#ffffff' }}>พี่เลี้ยง</Text>
+                                <Text style={{ color: '#000000' }}>พี่เลี้ยง</Text>
                             </TouchableOpacity>
                             <TouchableOpacity onPress={this.seleteType.bind(this, 'แกนนำเด็ก')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5, marginRight: 10 }} >
-                                <Text style={{ color: '#ffffff' }}>แกนนำเด็ก</Text>
+                                <Text style={{ color: '#000000' }}>แกนนำเด็ก</Text>
+                            </TouchableOpacity>
+                        </FooterTab>
+                    </Footer>
+                    <Footer>
+                        <FooterTab style={styles.footer}>
+
+                            <TouchableOpacity
+                                style={{ alignItems: 'center' }}
+                                onPress={() => this.props.navigation.navigate('Main')}
+                            >
+                                <Image
+                                    source={require('../assets/dropdown.png')}
+                                    style={{ width: 50, height: 50 }}></Image>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                style={{ alignItems: 'center' }}
+                                onPress={() => this.props.navigation.navigate('ListUser')}
+                            >
+                                <Image
+                                    source={require('../assets/database.png')}
+                                    style={{ width: 50, height: 50 }}></Image>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={{ alignItems: 'center', marginRight: 10 }}
+                                onPress={() => this.props.navigation.navigate('Profile')}
+                            >
+                                <Image
+                                    source={require('../assets/user.png')}
+                                    style={{ width: 50, height: 50 }}></Image>
                             </TouchableOpacity>
                         </FooterTab>
                     </Footer>
@@ -136,4 +168,4 @@ export class List_users extends Component {
     }
 }
 
-export default List_users
+export default ListUserScreen

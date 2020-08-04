@@ -1,18 +1,19 @@
 import React, { Component } from 'react'
 import { View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native'
-import Firebase from '../../../Firebase';
-import Idelete from '../../assets/trash_can.png';
-import Iedit from '../../assets/pencil.png';
-import styles from '../../styles/main.styles';
+import Firebase from '../Firebase';
+import Idelete from '../assets/trash_can.png';
+import Iedit from '../assets/pencil.png';
+import styles from '../styles/main.styles';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Picker, Text, Button, Icon } from 'native-base';
-import { fetch_user } from '../../actions';
+import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { isEmptyValue } from '../Methods';
+import { isEmptyValue } from '../components/Methods';
+import firestore from '@react-native-firebase/firestore';
 
-export class Local_calendars extends Component {
+export class LocalCalendarScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbLocalCalendar = Firebase.firestore().collection('LOCAL_CALENDARS');
+        this.tbLocalCalendar = firestore().collection('LOCAL_CALENDARS');
         //getl);
         this.state = {
             status_add: false,
@@ -76,7 +77,7 @@ export class Local_calendars extends Component {
     }
 
     delete(id) {
-        Firebase.firestore().collection('LOCAL_CALENDARS').doc(id).delete().then(() => {
+        firestore().collection('LOCAL_CALENDARS').doc(id).delete().then(() => {
             console.log("Document successfully deleted!");
 
         }).catch((error) => {
@@ -85,7 +86,7 @@ export class Local_calendars extends Component {
     }
     edit(id) {
         this.setState({ loading: true });
-        Firebase.firestore().collection('LOCAL_CALENDARS').doc(id).get().then((doc) => {
+        firestore().collection('LOCAL_CALENDARS').doc(id).get().then((doc) => {
             const { Name_activity, Type_activity } = doc.data();
             const { mouth } = this.state;
             const Month1 = parseInt(doc.data().Month1, 10);
@@ -114,7 +115,7 @@ export class Local_calendars extends Component {
     }
     authListener() {
         if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Login');
+            this.props.navigation.navigate('Home');
         } else {
             const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
             this.unsubscribe = this.tbLocalCalendar
@@ -237,7 +238,7 @@ export class Local_calendars extends Component {
                                 <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ช่วงเวลา</Text>
                                 <Text style={{ fontWeight: 'bold', margin: 10, width: '20%', textAlign: 'center' }}>แก้ไข</Text>
                             </View>
-                            <Text style={{ textAlign: 'center', color: 'red' }}>เศรษฐกิจ</Text>
+                            <Text style={{ textAlign: 'center', color: 'red', backgroundColor: '#c0c0c0' }}>เศรษฐกิจ</Text>
                             {this.state.dataCalendar1.map((element, i) =>
                                 <View Key={i} style={{ flex: 1, flexDirection: 'row' }}>
                                     <Text style={{ margin: 10, width: '35%', textAlign: 'center' }}>
@@ -246,10 +247,10 @@ export class Local_calendars extends Component {
                                         {element.Month1}-{element.Month2}</Text>
                                     <View style={{ margin: 10, width: '20%', flexDirection: 'row' }}>
                                         <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
-                                            <Image source={require('../../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
-                                            <Image source={require('../../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Image source={require('../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -267,10 +268,10 @@ export class Local_calendars extends Component {
                                         {element.Month1}-{element.Month2}</Text>
                                     <View style={{ margin: 10, width: '20%', flexDirection: 'row' }}>
                                         <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
-                                            <Image source={require('../../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
-                                            <Image source={require('../../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Image source={require('../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                     </View>
                                 </View>
@@ -281,36 +282,43 @@ export class Local_calendars extends Component {
 
                     {this.state.selected === 3 ?
                         <Content style={{ padding: 20 }}>
-                            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>เพิ่มข้อมูล</Text>
                             <Item fixedLabel >
+                                <Label>ชื่อ</Label>
                                 <Input value={Name_activity}
                                     onChangeText={str => this.setState({ Name_activity: str })} placeholder="ชื่อ กิจกรรม ประเพณี หรือสิ่งที่ทำ" />
                             </Item>
-                            <Picker
-                                selectedValue={Type_activity}
-                                style={{ width: 300 }}
-                                onValueChange={str => this.setState({ Type_activity: str })}>
-                                <Picker.Item key="0" label="กลุ่มกิจกรรม" value="" />
-                                <Picker.Item key="1" label="วัฒนธรรมประเพณี" value="วัฒนธรรมประเพณี" />
-                                <Picker.Item key="2" label="เศรษฐกิจ" value="เศรษฐกิจ" />
+                            <Item fixedLabel >
+                                <Label>ประเภท</Label>
+                                <Picker
+                                    selectedValue={Type_activity}
+                                    placeholder="เลือกประเภทกิจกรรม"
+                                    onValueChange={str => this.setState({ Type_activity: str })}>
+                                    <Picker.Item key="1" label="วัฒนธรรมประเพณี" value="วัฒนธรรมประเพณี" />
+                                    <Picker.Item key="2" label="เศรษฐกิจ" value="เศรษฐกิจ" />
+                                </Picker>
+                            </Item>
+                            <Item fixedLabel >
+                                <Label>เดือนที่เริ่ม</Label>
+                                <Picker
+                                    selectedValue={Month1}
+                                    placeholder="เลือกเดือนที่เริ่ม"
+                                    onValueChange={str => this.genrateMonth(str, 1)}>
+                                    {this.state.showMouth1}
 
-                            </Picker>
-                            <Picker
-                                selectedValue={Month1}
-                                style={{ width: 300 }}
-                                onValueChange={str => this.genrateMonth(str, 1)}>
-                                <Picker.Item key="" label="เดือนที่เริ่ม" value="" />
-                                {this.state.showMouth1}
+                                </Picker>
+                            </Item>
+                            <Item fixedLabel >
+                                <Label>เดือนที่สิ้นสุด</Label>
+                                <Picker
+                                    selectedValue={Month2}
+                                    placeholder="เลือกเดือนที่สิ้นสุด"
+                                    onValueChange={str => this.genrateMonth(str, 2)}>
+                                    {this.state.showMouth2}
 
-                            </Picker>
-                            <Picker
-                                selectedValue={Month2}
-                                style={{ width: 300 }}
-                                onValueChange={str => this.genrateMonth(str, 2)}>
-                                <Picker.Item key="" label="เดือนที่สิ้นสุด" value="" />
-                                {this.state.showMouth2}
+                                </Picker>
+                            </Item>
 
-                            </Picker>
+
 
                             <View style={{ flexDirection: 'row', justifyContent: 'center', flex: 1 }}>
                                 <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
@@ -353,5 +361,5 @@ const mapDispatchToProps = {
     fetch_user,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Local_calendars);
+export default connect(mapStateToProps, mapDispatchToProps)(LocalCalendarScreen);
 

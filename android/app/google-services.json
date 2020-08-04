@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "793612297896",
+    "firebase_url": "https://pedubon-2020.firebaseio.com",
+    "project_id": "pedubon-2020",
+    "storage_bucket": "pedubon-2020.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:793612297896:android:b67f4956990ce57caa849d",
+        "android_client_info": {
+          "package_name": "com.pedubon"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "793612297896-nt2pe1grs4e5lvj8h4mmuk50i3f4kep2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJIX2tOlaQmcCD8QB8oo0onXC_i6ey5uE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "793612297896-nt2pe1grs4e5lvj8h4mmuk50i3f4kep2.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "793612297896-2d3ped96gh6m7qaihlkb67eui77mmrag.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.pedubon2"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

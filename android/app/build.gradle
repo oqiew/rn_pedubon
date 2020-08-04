@@ -1,5 +1,5 @@
 apply plugin: "com.android.application"
-
+apply plugin: 'com.google.gms.google-services' 
 import com.android.build.OutputFile
 
 /**
@@ -22,7 +22,7 @@ import com.android.build.OutputFile
  *   bundleCommand: "ram-bundle",
  *
  *   // whether to bundle JS and assets in debug mode
- *   bundleInDebug: false,
+ *   bundleInDebug: false,  +
  *
  *   // whether to bundle JS and assets in release mode
  *   bundleInRelease: true,
@@ -131,8 +131,9 @@ android {
         applicationId "com.pedubon"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 6
-        versionName "6"
+        versionCode 7
+        versionName "7"
+        multiDexEnabled true
     }
     splits {
         abi {

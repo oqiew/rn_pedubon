@@ -11,8 +11,9 @@ const firebaseConfig = {
     projectId: "pedubon-2020",
     storageBucket: "pedubon-2020.appspot.com",
     messagingSenderId: "793612297896",
-    appId: "1:793612297896:web:51782ab8f4e8d5f1aa849d",
-    measurementId: "G-7STHE2YKPY"
+    appId: "1:793612297896:web:6d9e98b87828fdd0aa849d",
+    measurementId: "G-V4LHH9XJHY"
+
 };
 firebase.initializeApp(firebaseConfig);
 

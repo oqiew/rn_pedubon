@@ -1,19 +1,19 @@
 import React, { Component } from 'react'
 import { View, ScrollView, TouchableOpacity, Image, Alert } from 'react-native'
-import Firebase from '../../../Firebase';
+import Firebase from '../Firebase';
 import Timeline from 'react-native-timeline-flatlist'
-import Idelete from '../../assets/trash_can.png';
-import Iedit from '../../assets/pencil.png';
-import styles from '../../styles/main.styles';
-import { fetch_user } from '../../actions';
+import Idelete from '../assets/trash_can.png';
+import Iedit from '../assets/pencil.png';
+import styles from '../styles/main.styles';
+import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { isEmptyValue } from '../Methods';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Text, Button, Icon } from 'native-base';
-
-export class Local_historys extends Component {
+import { isEmptyValue } from '../components/Methods';
+import firestore from '@react-native-firebase/firestore';
+export class LocalHistoryScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbLocalHistory = Firebase.firestore().collection('LOCAL_HISTORYS');
+        this.tbLocalHistory = firestore().collection('LOCAL_HISTORYS');
         //getl);
         this.state = {
             dataTimeline: [],
@@ -44,7 +44,7 @@ export class Local_historys extends Component {
     }
     authListener() {
         if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Login');
+            this.props.navigation.navigate('Home');
         } else {
             const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
             this.unsubscribe = this.tbLocalHistory
@@ -58,7 +58,7 @@ export class Local_historys extends Component {
 
 
     delete(id) {
-        Firebase.firestore().collection('LOCAL_HISTORYS').doc(id).delete().then(() => {
+        this.tbLocalHistory.doc(id).delete().then(() => {
             console.log("Document successfully deleted!");
 
         }).catch((error) => {
@@ -66,7 +66,7 @@ export class Local_historys extends Component {
         });
     }
     edit(id) {
-        Firebase.firestore().collection('LOCAL_HISTORYS').doc(id).get().then((doc) => {
+        this.tbLocalHistory.doc(id).get().then((doc) => {
             const { Name_activity, Description, Year_start } = doc.data();
             this.setState({
                 Name_activity, Description, Year_start, edit_ID: id, selected: 3
@@ -244,10 +244,10 @@ export class Local_historys extends Component {
                                 <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>{element.Informer_name}</Text>
                                 <View style={{ margin: 10, width: '20%', textAlign: 'center', flexDirection: 'row' }}>
                                     <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
-                                        <Image source={require('../../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                        <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
-                                        <Image source={require('../../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                        <Image source={require('../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                 </View>
                             </View>
@@ -259,16 +259,18 @@ export class Local_historys extends Component {
                 }
                 {this.state.selected === 3 ?
                     <Content style={{ padding: 20 }}>
-                        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>เพิ่มข้อมูล</Text>
                         <Item fixedLabel >
+                            <Label>ชื่อเหตุการณ์ :</Label>
                             <Input value={Name_activity}
                                 onChangeText={str => this.setState({ Name_activity: str })} placeholder="ชื่อหัวข้อ เหตุการณ์ หรือกิจกรรม" />
                         </Item>
-                        <Item fixedLabel >
-                            <Textarea rowSpan={4} value={Description}
+                        <Item stackedLabel >
+                            <Label>คำอธิบาย :</Label>
+                            <Textarea rowSpan={4} value={Description} style={{ fontSize: 16 }}
                                 onChangeText={str => this.setState({ Description: str })} placeholder="คำอธิบาย เหตุการณ์ หรือกิจกรรมที่เกิดขึ้นกับชุมชน" />
                         </Item>
                         <Item fixedLabel >
+                            <Label>ปีที่เริ่ม :</Label>
                             <Input value={Year_start} maxLength={4} onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
                         </Item>
                         <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
@@ -312,4 +314,4 @@ const mapDispatchToProps = {
     fetch_user,
 };
 
-export default connect(mapStateToProps, mapDispatchToProps)(Local_historys);
+export default connect(mapStateToProps, mapDispatchToProps)(LocalHistoryScreen);
