@@ -8,7 +8,8 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build": "cd android&&gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-community/geolocation": "^2.0.2",

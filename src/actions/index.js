@@ -15,6 +15,7 @@ export const setStageToFailure = (payload) => ({
 
 
 export const fetch_user = (data) => {
+    // console.log(data)
     return (dispatch) => {
         dispatch(setStageToFetching());
         if (!isEmptyValue(data.User_ID)) {

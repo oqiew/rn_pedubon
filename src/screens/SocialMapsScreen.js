@@ -46,7 +46,9 @@ export class Main extends Component {
             //data insert map
             Geo_map_name: '',
             Geo_map_type: '',
+            Geo_map_time: '',
             Geo_map_description: '',
+            Geo_map_result_description: '',
             Informer_ID: '',
             Create_date: '',
             Map_iamge_URL: '',
@@ -162,20 +164,25 @@ export class Main extends Component {
 
 
     onMarkerClicked(t, map, coord) {
-        const { latLng } = coord;
-        const lat = latLng.lat();
-        const lng = latLng.lng();
-        if (this.state.showingInfoWindow) {
-            this.setState({
-                showingInfoWindow: false,
-                activeMarker: null
+        try {
+            const { latLng } = coord;
+            const lat = latLng.lat();
+            const lng = latLng.lng();
+            if (this.state.showingInfoWindow) {
+                this.setState({
+                    showingInfoWindow: false,
+                    activeMarker: null
+                })
+            }
+            setTimeout(() => {
+                this.setState({
+                    position: { lat, lng }
+                }, 100)
             })
+        } catch (e) {
+
         }
-        setTimeout(() => {
-            this.setState({
-                position: { lat, lng }
-            }, 100)
-        })
+
     }
 
     ListMark = querySnapshot => {
@@ -194,7 +201,9 @@ export class Main extends Component {
                 Map_iamge_URL,
                 Geo_map_name,
                 Geo_map_type,
+                Geo_map_time,
                 Geo_map_description,
+                Geo_map_result_description,
                 Informer_name,
             } = doc.data();
             const {
@@ -315,6 +324,8 @@ export class Main extends Component {
                         Map_iamge_URL,
                         Geo_map_position,
                         Geo_map_type,
+                        Geo_map_time,
+                        Geo_map_result_description
                     });
                 }
             }
@@ -354,6 +365,8 @@ export class Main extends Component {
             Geo_map_name: '',
             Geo_map_type: '',
             Geo_map_description: '',
+            Geo_map_time: '',
+            Geo_map_result_description: '',
             Create_date: '',
             Map_iamge_URL: '',
             mapAddData: false,
@@ -446,7 +459,8 @@ export class Main extends Component {
         this.setState({
             loading: true,
         });
-        const { position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Area_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
+        const { position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Area_ID, Area_PID, Area_DID, Area_SDID, Geo_map_time,
+            Geo_map_result_description } = this.state;
 
         if (!isEmptyValue(Map_iamge_URL)) {
             if (
@@ -466,6 +480,8 @@ export class Main extends Component {
                             Map_iamge_URL,
                             Geo_map_name,
                             Geo_map_type,
+                            Geo_map_time,
+                            Geo_map_result_description,
                             Geo_map_description,
                             Informer_ID: this.state.User_ID,
                             Area_ID, Area_PID, Area_DID, Area_SDID,
@@ -477,6 +493,8 @@ export class Main extends Component {
                                 Geo_map_type: '',
                                 Geo_map_description: '',
                                 Create_date: '',
+                                Geo_map_time: '',
+                                Geo_map_result_description: '',
                                 Map_iamge_URL: '',
                                 mapAddData: false,
                                 maptable: false,
@@ -501,6 +519,8 @@ export class Main extends Component {
                             Geo_map_name,
                             Geo_map_type,
                             Geo_map_description,
+                            Geo_map_time,
+                            Geo_map_result_description,
                             Informer_ID: this.state.User_ID,
                             Area_ID, Area_PID, Area_DID, Area_SDID,
                         })
@@ -510,6 +530,8 @@ export class Main extends Component {
                                 Geo_map_name: '',
                                 Geo_map_type: '',
                                 Geo_map_description: '',
+                                Geo_map_time: '',
+                                Geo_map_result_description: '',
                                 Create_date: '',
                                 Map_iamge_URL: '',
                                 mapAddData: false,
@@ -548,6 +570,8 @@ export class Main extends Component {
             Geo_map_type: data.Geo_map_type,
             Geo_map_description: data.Geo_map_description,
             Map_iamge_URL: data.Map_iamge_URL,
+            Geo_map_time: data.Geo_map_time,
+            Geo_map_result_description: data.Geo_map_result_description,
             maptable: false,
             mapAddData: true,
             edit_ID: id,
@@ -562,19 +586,18 @@ export class Main extends Component {
             // console.log(this.state.Role)
             if (this.state.User_ID === doc.data().Informer_ID || this.state.Role === 'admin') {
                 if (doc.exists && doc.data().Map_iamge_URL !== '') {
-                    var desertRef = storage().refFromURL(
+                    var desertRef = Firebase.storage().refFromURL(
                         doc.data().Map_iamge_URL,
                     );
                     desertRef.delete().then(function () {
                         console.log('delete geomap and image sucess');
-                    })
-                        .catch(function (error) {
-                            console.log(
-                                'image No such document! ' + doc.data().areaImageName,
-                            );
-                        });
+                    }).catch(function (error) {
+                        console.log(
+                            'image No such document!' + doc.data().areaImageName,
+                        );
+                    });
                 } else {
-                    console.log('geomap image  No such document! ' + id);
+                    console.log('geomap image  No such document!' + id);
                 }
                 firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
                     console.log('Document successfully deleted!');
@@ -585,6 +608,8 @@ export class Main extends Component {
                         Informer_ID: '',
                         Create_date: '',
                         Map_iamge_URL: '',
+                        Geo_map_time: '',
+                        Geo_map_result_description: '',
                         status_add: false,
                         edit_ID: '',
                     });
@@ -594,6 +619,7 @@ export class Main extends Component {
                     });
             } else {
                 console.log('can not delete');
+                alert('คุณไม่มีสิทธิ์ลบข้อมูลนี้');
             }
         });
     }
@@ -603,7 +629,7 @@ export class Main extends Component {
 
     render() {
         const { Selected } = this.state;
-        const { Geo_map_name, Geo_map_type, Geo_map_description } = this.state;
+        const { Geo_map_name, Geo_map_type, Geo_map_description, Geo_map_time, Geo_map_result_description } = this.state;
         const { Provinces, Districts, Sub_districts, Bans } = this.state;
         const { Area_ID, User_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
         const mstyle = StyleSheet.create({
@@ -622,7 +648,7 @@ export class Main extends Component {
             return <Loading></Loading>;
         } else if (this.state.page === 'Main') {
             return (
-                <Container>
+                <Container style={{ backgroundColor: "#e4e4e4" }}>
                     {/* main show */}
 
                     {Selected === 1 ? (
@@ -636,8 +662,7 @@ export class Main extends Component {
                                             margin: 5,
                                             fontSize: 18,
                                         }}>
-                                        ตารางข้อมูล
-                  </Text>
+                                        ตารางข้อมูล</Text>
                                     <View
                                         style={{
                                             flex: 1,
@@ -652,8 +677,7 @@ export class Main extends Component {
                                                 width: '20%',
                                                 textAlign: 'center',
                                             }}>
-                                            ชื่อพื้นที่
-                    </Text>
+                                            ชื่อพื้นที่</Text>
                                         <Text
                                             style={{
                                                 fontWeight: 'bold',
@@ -661,8 +685,7 @@ export class Main extends Component {
                                                 width: '20%',
                                                 textAlign: 'center',
                                             }}>
-                                            ลักษณะพื้นที่
-                    </Text>
+                                            ลักษณะพื้นที่</Text>
                                         <Text
                                             style={{
                                                 fontWeight: 'bold',
@@ -670,8 +693,7 @@ export class Main extends Component {
                                                 width: '20%',
                                                 textAlign: 'center',
                                             }}>
-                                            ผู้เพิ่มข้อมูล
-                    </Text>
+                                            ผู้เพิ่มข้อมูล</Text>
                                         <Text
                                             style={{
                                                 fontWeight: 'bold',
@@ -679,8 +701,7 @@ export class Main extends Component {
                                                 width: '20%',
                                                 textAlign: 'center',
                                             }}>
-                                            แก้ไข
-                    </Text>
+                                            แก้ไข</Text>
                                     </View>
                                     <ScrollView>
                                         {this.state.geoMaps.map((element, i) => (
@@ -761,6 +782,7 @@ export class Main extends Component {
                                     <Item fixedLabel>
                                         <Label>ชื่อพื้นที่ :</Label>
                                         <Input
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                             value={Geo_map_name}
                                             onChangeText={str => this.setState({ Geo_map_name: str })}
                                         />
@@ -768,6 +790,7 @@ export class Main extends Component {
                                     <Item fixedLabel>
                                         <Label>ประเภท :</Label>
                                         <Picker
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                             selectedValue={Geo_map_type}
                                             onValueChange={str => this.setState({ Geo_map_type: str })}>
                                             <Picker.Item key="0" label="เลือกประเภท" value="" />
@@ -791,18 +814,64 @@ export class Main extends Component {
                                             />
                                         </Picker>
                                     </Item>
-                                    <Item stackedLabel>
-                                        <Label>คำอธิบาย :</Label>
 
-                                        <Textarea
-                                            rowSpan={4}
-                                            value={Geo_map_description}
-                                            onChangeText={str =>
-                                                this.setState({ Geo_map_description: str })
-                                            }
-                                            placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
-                                        />
-                                    </Item>
+                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+
+                                        <Item fixedLabel>
+
+                                            <Label>เวลาที่เกิดเหตุ :</Label>
+                                            <Input
+                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                                value={Geo_map_time}
+                                                keyboardType='number-pad'
+                                                onChangeText={str => this.setState({ Geo_map_time: str })}
+                                                placeholder="00:00"
+                                            />
+
+                                        </Item>}
+                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+                                        <Item stackedLabel>
+                                            <Label>ลักษณะกิจกรรม :</Label>
+                                            <Textarea
+                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                                rowSpan={4}
+                                                value={Geo_map_description}
+                                                onChangeText={str =>
+                                                    this.setState({ Geo_map_description: str })
+                                                }
+                                                placeholder="ลักษณะกิจกรรมที่เกิดขึ้นบนพื้นที่ เกิดเหตุการณ์อะไร อย่างไร"
+                                            />
+                                        </Item>}
+                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+                                        <Item stackedLabel>
+                                            <Label>ผลที่เกิดขึ้น :</Label>
+                                            <Textarea
+                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                                rowSpan={4}
+                                                value={Geo_map_result_description}
+                                                onChangeText={str =>
+                                                    this.setState({ Geo_map_result_description: str })
+                                                }
+                                                placeholder="จากกิจกรรมบนพื้นที่ มีผลที่เกิดขึ้นยังไงบ้าง เช่น การรวมตัวของวัยรุ่นหลังวัดที่เสพสารเสพติด ทำให้เกิดเด็กติดยาและเกิดการลักขโมย"
+                                            />
+                                        </Item>}
+
+
+                                    {(Geo_map_type !== 'flag_danger' && Geo_map_type !== 'flag_good') &&
+                                        <Item stackedLabel>
+                                            <Label>คำอธิบาย :</Label>
+
+                                            <Textarea
+                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                                rowSpan={4}
+                                                value={Geo_map_description}
+                                                onChangeText={str =>
+                                                    this.setState({ Geo_map_description: str })
+                                                }
+                                                placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
+                                            />
+                                        </Item>}
+
                                     {this.state.Map_iamge_URL === '' ? (
                                         <View></View>
                                     ) : (

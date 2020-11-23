@@ -18,10 +18,9 @@ class HomeScreen extends Component {
         super(props);
         this.state = {
             loading: false,
-
             //user login
-            Email: 't2@gmail.com',
-            Password: '12345678',
+            Email: '',
+            Password: '',
             Confirm_password: '',
             pass: true,
             icon: 'eye',
@@ -29,12 +28,13 @@ class HomeScreen extends Component {
             register: false,
             step: 1
         };
-        this.onStart(this);
+
     }
 
     componentDidMount() {
         this.onStart(this);
     }
+
 
     setProfile = (uid, email) => {
         console.log(uid)
@@ -116,7 +116,7 @@ class HomeScreen extends Component {
     }
     onResetPassword = (e) => {
         e.preventDefault();
-        auth().sendPasswordResetEmail(this.state.Email)
+        Firebase.auth().sendPasswordResetEmail(this.state.Email)
             .then((doc) => {
                 this.setState({
                     resetPass: false
@@ -128,46 +128,13 @@ class HomeScreen extends Component {
             });
     }
 
-    onRegister() {
-        const { Email, Password, Confirm_password } = this.state;
-        if (Email !== '' && Password !== '' && Confirm_password !== '') {
-            if (Password.length < 8 || Confirm_password.length < 8 || Password.length > 16 || Confirm_password.length > 16) {
-                Alert.alert("ความยาวของรหัสผ่านไม่ถูกต้อง");
-            } else {
-                if (Password !== Confirm_password) {
-                    console.log(Password + "=" + Confirm_password);
-                    Alert.alert("พาสเวิร์ด ไม่ตรงกัน");
-                } else {
-                    Firebase.auth().createUserWithEmailAndPassword(Email, Password)
-                        .then(doc => {
-                            Alert.alert("บันทึก อีเมลล์สำเร็จ");
-                            this.setState({
-                                loading: false
-                            })
-                            this.props.fetch_user({ User_ID: doc.uid, Email })
-                            this.props.navigation.navigate('Home');
-                        }).catch(error => {
-                            //can not use email show warnin
-                            Alert.alert("บันทึก อีเมลล์ไม่สำเร็จ");
-                            this.setState({
-                                loading: false
-                            })
 
-                        })
-                }
-            }
-        } else {
-            Alert.alert("กรอกข้อมูลไม่ครบ บันทึกไม่สำเร็จ");
-            this.setState({
-                loading: false
-            })
-        }
-    }
     onStart = (e) => {
+        console.log('welcome')
         this.setState({
             loading: true,
         });
-        auth().onAuthStateChanged(user => {
+        Firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 this.setProfile(user.uid, user.email)
                 this.setState({
@@ -195,6 +162,10 @@ class HomeScreen extends Component {
             });
     }
     onRegister() {
+        console.log("create email")
+        this.setState({
+            loading: true
+        })
         const { Email, Password, Confirm_password } = this.state;
         if (Email !== '' && Password !== '' && Confirm_password !== '') {
             if (Password.length < 8 || Confirm_password.length < 8 || Password.length > 16 || Confirm_password.length > 16) {
@@ -203,14 +174,19 @@ class HomeScreen extends Component {
                 if (Password !== Confirm_password) {
                     console.log(Password + "=" + Confirm_password);
                     Alert.alert("พาสเวิร์ด ไม่ตรงกัน");
+                    this.setState({
+                        loading: false,
+
+                    })
                 } else {
                     Firebase.auth().createUserWithEmailAndPassword(Email, Password)
                         .then(doc => {
                             Alert.alert("บันทึก อีเมลล์สำเร็จ");
                             this.setState({
-                                loading: false
+                                loading: false,
+                                step: 1
                             })
-                            this.props.fetch_user({ User_ID: doc.uid, Email })
+                            this.props.fetch_user({ User_ID: doc.user.uid, Email })
                             console.log('register success')
                             this.props.navigation.navigate('ProfileEdit');
                         }).catch(error => {
@@ -219,7 +195,6 @@ class HomeScreen extends Component {
                             this.setState({
                                 loading: false
                             })
-
                         })
                 }
             }
@@ -230,6 +205,7 @@ class HomeScreen extends Component {
             })
         }
     }
+
     onLoginButtonPress = (e) => {
         e.preventDefault(); .3
         const { Email, Password } = this.state;

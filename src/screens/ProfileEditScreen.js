@@ -44,6 +44,8 @@ class ProfileEditScreen extends Component {
 
                 loading: false,
                 showBirthday: false,
+
+                isUploaded: '0'
             }
 
         } else {
@@ -63,6 +65,8 @@ class ProfileEditScreen extends Component {
 
                 loading: false,
                 showBirthday: false,
+
+                isUploaded: '0'
             }
         }
 
@@ -85,8 +89,8 @@ class ProfileEditScreen extends Component {
                 this.listDistrict(Province_ID);
                 this.listSub_district(Province_ID, District_ID);
             } else {
+                console.log("no profile")
                 this.listProvinces();
-                this.listDistrict(0);
                 this.setState({
                     new_user: true
                 })
@@ -231,6 +235,7 @@ class ProfileEditScreen extends Component {
                         Line_ID, Facebook, Birthday, Position, Department,
                         Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
                         Add_date: GetCurrentDate("/"), Area_ID, Role, Area_PID, Area_DID, Area_SDID,
+                        User_type
 
                     }).then((docRef) => {
                         this.setState({
@@ -271,6 +276,7 @@ class ProfileEditScreen extends Component {
                         Line_ID, Facebook, Birthday: new Date(Birthday.seconds * 1000), Position, Department,
                         Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL, Area_PID, Area_DID, Area_SDID,
                         Add_date: GetCurrentDate("/"), Area_ID, Role,
+                        User_type
                     }).then((docRef) => {
 
                         this.setState({
@@ -342,7 +348,7 @@ class ProfileEditScreen extends Component {
                 this.setState({
                     imgSource: source,
                     imageUri: response.uri,
-                    isUploaded: false,
+                    isUploaded: '2',
 
                 });
 
@@ -385,7 +391,7 @@ class ProfileEditScreen extends Component {
                 // URL of the image uploaded on Firebase storage
                 console.log(url);
                 window.XMLHttpRequest = tempWindowXMLHttpRequest;
-                this.setState({ Avatar_URL: url, isUploaded: true });
+                this.setState({ Avatar_URL: url, isUploaded: '3' });
 
             })
             .catch((error) => {
@@ -424,13 +430,13 @@ class ProfileEditScreen extends Component {
         } else {
             return (
                 <Container>
-                    <Content>
+                    <Content style={{ backgroundColor: "#e4e4e4" }}>
 
                         <View style={styles.container}>
                             {(isEmptyValue(Avatar_URL) ?
                                 <Image source={require('../assets/user.png')} style={styles.avatar}></Image>
                                 : <Image source={{ uri: Avatar_URL }} style={styles.avatar}></Image>)}
-
+                            {this.state.isUploaded === '2' && <Text>กำลังอัพโหลดรูปภาพ</Text>}
                             <View>
                                 <Button style={{ margin: 10 }} onPress={this.handleChoosePhoto.bind(this)}>
                                     <Icon name='plus' type="AntDesign" />
@@ -439,40 +445,42 @@ class ProfileEditScreen extends Component {
                             </View>
 
 
+
                             <Item fixedLabel >
                                 <Label>ชื่อ :</Label>
-                                <Input value={Name} onChangeText={str => this.setState({ Name: str })} />
+                                <Input value={Name} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Name: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>นามสกุล :</Label>
-                                <Input value={Last_name} onChangeText={str => this.setState({ Last_name: str })} />
+                                <Input value={Last_name} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Last_name: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>ชื่อเล่น :</Label>
-                                <Input value={Nickname} onChangeText={str => this.setState({ Nickname: str })} />
+                                <Input value={Nickname} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Nickname: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>เพศ :</Label>
                                 <Picker
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     selectedValue={Sex}
                                     onValueChange={str => this.setState({ Sex: str })}>
                                     <Picker.Item label="เลือกเพศ" value="" />
                                     <Picker.Item label="ชาย" value="ชาย" />
                                     <Picker.Item label="หญิง" value="หญิง" />
                                     <Picker.Item label="อื่นๆ" value="อื่นๆ" />
-
                                 </Picker>
                             </Item>
 
                             <Item>
                                 {/* {console.log('true', this.state.showBirthday)} */}
-                                {this.state.showBirthday ? <Text></Text> : <Text style={{ fontSize: 16 }}>
-                                    {this.state.day + "/" + this.state.month + "/" + this.state.year}
-                                </Text>
-
+                                {this.state.showBirthday ? <Text></Text> :
+                                    this.state.day !== '' ?
+                                        <Text style={{ fontSize: 16 }}>
+                                            {this.state.day + "/" + this.state.month + "/" + this.state.year}
+                                        </Text> : <Text></Text>
                                 }
                                 <DatePicker
-
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     maximumDate={new Date()}
                                     placeHolderText="วันเกิด"
                                     dateFormat="dd/MM/yyyy"
@@ -485,19 +493,20 @@ class ProfileEditScreen extends Component {
 
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>เบอร์มือถือ :</Label>
-                                <Input value={Phone_number} onChangeText={str => this.setState({ Phone_number: str })} />
+                                <Input value={Phone_number} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Phone_number: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>Facebook :</Label>
-                                <Input value={Facebook} onChangeText={str => this.setState({ Facebook: str })} />
+                                <Input value={Facebook} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Facebook: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>Line_ID :</Label>
-                                <Input value={Line_ID} onChangeText={str => this.setState({ Line_ID: str })} />
+                                <Input value={Line_ID} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Line_ID: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>ประเภทผู้ใช้ :</Label>
                                 <Picker
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     selectedValue={this.state.User_type}
                                     onValueChange={(itemValue, itemIndex) =>
                                         this.setState({ User_type: itemValue })}>
@@ -512,16 +521,17 @@ class ProfileEditScreen extends Component {
 
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>ตำแหน่ง :</Label>
-                                <Input value={Position} onChangeText={str => this.setState({ Position: str })} />
+                                <Input value={Position} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Position: str })} />
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
                                 <Label>หน่วยงาน :</Label>
-                                <Input value={Department} onChangeText={str => this.setState({ Department: str })} />
+                                <Input value={Department} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Department: str })} />
                             </Item>
 
                             <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ประเภทผู้ใช้ :</Label>
+                                <Label>จังหวัด :</Label>
                                 <Picker
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     selectedValue={Province_ID}
                                     onValueChange={this.onSelectProvince.bind(this)}>
                                     <Picker.Item key="0" label="เลือกจังหวัด" value="" />
@@ -532,8 +542,10 @@ class ProfileEditScreen extends Component {
                                 </Picker>
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ประเภทผู้ใช้ :</Label>
+                                <Label>อำเภอ :</Label>
                                 <Picker
+
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     selectedValue={District_ID}
                                     onValueChange={this.onSelectDistrict.bind(this)}>
                                     <Picker.Item key="0" label="เลือกอำเภอ" value="" />
@@ -543,8 +555,9 @@ class ProfileEditScreen extends Component {
                                 </Picker>
                             </Item>
                             <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ประเภทผู้ใช้ :</Label>
+                                <Label>ตำบล :</Label>
                                 <Picker
+                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                     selectedValue={Sub_district_ID}
                                     onValueChange={(itemValue, itemIndex) =>
                                         this.setState({ Sub_district_ID: itemValue })

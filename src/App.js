@@ -30,7 +30,9 @@ import LocalHistoryScreen from './screens/LocalHistoryScreen';
 import PersonHistoryScreen from './screens/PersonHistoryScreen';
 import PersonsScreen from './screens/PersonsScreen';
 const Stack = createStackNavigator();
+
 function App() {
+
     return (
         <NavigationContainer>
             <Stack.Navigator
@@ -114,4 +116,5 @@ function App() {
         </NavigationContainer>
     )
 }
+
 export default App;

@@ -90,7 +90,7 @@ export class MainScreen extends Component {
                     </Text>
                                     </TouchableOpacity>
                                 </Col>
-                                <Col style={{ height: 200, padding: 10 }}>
+                                <Col style={{ height: 500, padding: 10 }}>
                                     <TouchableOpacity
                                         style={{ alignItems: 'center', padding: 10 }}
                                         onPress={() => this.props.navigation.navigate('SocialMaps')}
@@ -119,7 +119,7 @@ export class MainScreen extends Component {
                         <FooterTab style={styles.footer}>
 
                             <TouchableOpacity
-                                style={{ alignItems: 'center' }}
+                                style={{ alignItems: 'center', marginLeft: 20 }}
                                 onPress={() => this.props.navigation.navigate('Main')}
                             >
                                 <Image
@@ -136,7 +136,7 @@ export class MainScreen extends Component {
                                     style={{ width: 50, height: 50 }}></Image>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', marginRight: 10 }}
+                                style={{ alignItems: 'center', marginRight: 20 }}
                                 onPress={() => this.props.navigation.navigate('Profile')}
                             >
                                 <Image
