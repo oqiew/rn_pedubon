@@ -14,22 +14,26 @@ import { connect } from 'react-redux';
 import styles from '../styles/main.styles';
 // page
 import {
-    Container, Content, FooterTab, Footer, Fab,
-    Icon, Header, Item, Textarea, Label, Input, Picker, Button, Text,
+    Container, Content, Footer, Radio, Icon, Item, Textarea, Label, Input, Picker, Button, Text, ListItem, Left, Right,
 } from 'native-base';
 import Firebase from '../Firebase';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-import ImagePicker from 'react-native-image-picker';
-import RNFetchBlob from 'react-native-fetch-blob';
+import ImagePicker from 'react-native-image-picker'
+import ImageResizer from 'react-native-image-resizer'
 import Geolocation from '@react-native-community/geolocation';
-import data_provinces from '../data/provinces';
 import { isEmptyValue, GetCurrentDate } from '../components/Methods';
 import Loading from '../components/Loading';
 import firestore from '@react-native-firebase/firestore';
+import Storage from '@react-native-firebase/storage';
+import { TableName } from '../Database/constan';
+import PDHeader from '../components/header';
+import themeStyle from '../styles/theme.style';
+import { routeName } from '../routes/RouteConstant';
+
 export class Main extends Component {
     constructor(props) {
         super(props);
-        this.tbSocialMaps = firestore().collection('SOCIAL_MAPS');
+        this.tbSocialMaps = firestore().collection(TableName.Social_maps);
         this.state = {
             page: 'Main',
             edit_ID: '',
@@ -51,7 +55,12 @@ export class Main extends Component {
             Geo_map_result_description: '',
             Informer_ID: '',
             Create_date: '',
-            Map_iamge_URL: '',
+            Map_image_URL: '',
+            Map_image_name: '',
+            Map_image_uri: '',
+            Important: false,
+            new_upload_image: false,
+            map_image_file_name: '',
             uploaded: false,
             //select data
             //input data profile
@@ -84,13 +93,14 @@ export class Main extends Component {
         };
     }
     componentDidMount() {
-        const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.props.fetchReducer.user;
-        this.tbSocialMaps.where('Area_PID', '==', Area_PID).where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID)
-            .where('Area_ID', '==', Area_ID)
+        this.tbSocialMaps.where('Area_ID', '==', this.state.Area_ID)
             .onSnapshot(this.ListMark);
     }
-
-    //   }
+    UNSAFE_componentWillReceiveProps(nextProps) {
+        this.setState({
+            ...nextProps.fetchReducer.user
+        })
+    }
     get getgeolocation() {
         return {
             region: {
@@ -101,65 +111,31 @@ export class Main extends Component {
             },
         };
     }
-    hasLocationPermission = async () => {
-        if (
-            Platform.OS === 'ios' ||
-            (Platform.OS === 'android' && Platform.Version < 23)
-        ) {
-            return true;
-        }
 
-        const hasPermission = await PermissionsAndroid.check(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-        );
-
-        if (hasPermission) return true;
-
-        const status = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.CAMERA,
-        );
-
-        if (status === PermissionsAndroid.RESULTS.GRANTED) return true;
-
-        if (status === PermissionsAndroid.RESULTS.DENIED) {
-            ToastAndroid.show(
-                'Location permission denied by user.',
-                ToastAndroid.LONG,
-            );
-        } else if (status === PermissionsAndroid.RESULTS.NEVER_ASK_AGAIN) {
-            ToastAndroid.show(
-                'Location permission revoked by user.',
-                ToastAndroid.LONG,
-            );
-        }
-
-        return false;
-    };
     findCoordinates = () => {
-        if (this.hasLocationPermission) {
-            Geolocation.getCurrentPosition(
-                position => {
-                    console.log(position.coords.latitude
-                        , ",", position.coords.longitude);
-                    this.setState({
-                        position: {
-                            lat: position.coords.latitude,
-                            lng: position.coords.longitude,
-                        },
-                    });
-                },
-                error => {
-                    console.log(error);
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 10000,
-                    distanceFilter: 50,
-                    forceRequestLocation: true,
-                },
-            );
-        }
+        Geolocation.getCurrentPosition(
+            position => {
+                console.log(position.coords.latitude
+                    , ",", position.coords.longitude);
+                this.setState({
+                    position: {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    },
+                });
+            },
+            error => {
+                console.log(error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 10000,
+                distanceFilter: 50,
+                forceRequestLocation: true,
+            },
+        );
+
     };
 
 
@@ -198,7 +174,7 @@ export class Main extends Component {
             // console.log(doc.data())
             const {
                 Geo_map_position,
-                Map_iamge_URL,
+                Map_image_URL,
                 Geo_map_name,
                 Geo_map_type,
                 Geo_map_time,
@@ -207,13 +183,7 @@ export class Main extends Component {
                 Informer_name,
             } = doc.data();
             const {
-                sall,
-                shome,
-                sresource,
-                sorganization,
-                sflag_good,
-                sflag_danger,
-                saccident,
+                sall, shome, sresource, sorganization, sflag_good, sflag_danger, saccident,
             } = this.state;
             var icon_m = '';
             var name_type = '';
@@ -279,9 +249,8 @@ export class Main extends Component {
                                 longitude: Geo_map_position.lng,
                             }}
                             description={Geo_map_description}
-                        // image={Map_iamge_URL}
+                        // image={Map_image_URL}
                         // icon={icon_m}
-
                         // label={count}
                         >
                             <View>
@@ -321,7 +290,7 @@ export class Main extends Component {
                         name_type,
                         Geo_map_description,
                         Informer_name,
-                        Map_iamge_URL,
+                        Map_image_URL,
                         Geo_map_position,
                         Geo_map_type,
                         Geo_map_time,
@@ -347,20 +316,6 @@ export class Main extends Component {
         });
     };
     cancel() {
-        if (
-            !isEmptyValue(this.state.Map_iamge_URL) &&
-            isEmptyValue(this.state.edit_ID)
-        ) {
-            var desertRef = Firebase.storage().refFromURL(this.state.Map_iamge_URL);
-            desertRef
-                .delete()
-                .then(function () {
-                    console.log('delete geo image sucess');
-                })
-                .catch(function (error) {
-                    console.log('image No such document! ');
-                });
-        }
         this.setState({
             Geo_map_name: '',
             Geo_map_type: '',
@@ -368,17 +323,33 @@ export class Main extends Component {
             Geo_map_time: '',
             Geo_map_result_description: '',
             Create_date: '',
-            Map_iamge_URL: '',
+            Map_image_URL: '',
+            Map_image_uri: '',
+            new_upload_image: false,
             mapAddData: false,
             maptable: false,
+            Important: false,
             edit_ID: '',
             loading: false,
+            Map_image_uri: ''
         });
     }
+    uploadImage(id) {
+        return new Promise((resolve, reject) => {
+            const imageRef = Storage().ref('GeoMaps').child('geo' + id + '.jpg')
+            let mime = 'image/jpg';
+            imageRef.putFile(this.state.Map_image_uri, { contentType: mime })
+                .then(() => { return imageRef.getDownloadURL() })
+                .then((url) => {
+                    resolve(url)
+                })
+                .catch((error) => { reject(error) })
+        })
+    }
 
-    handleChoosePhoto = () => {
+    _handleChoosePhoto = () => {
         const options = {
-            title: 'เลือกรูปพื้นที่',
+            title: 'เลือกรูปโปรไฟล์',
             takePhotoButtonTitle: 'ถ่ายรูป',
             chooseFromLibraryButtonTitle: 'เลือกรูปในคลัง',
             cancelButtonTitle: 'ยกเลิก',
@@ -386,8 +357,7 @@ export class Main extends Component {
                 skipBackup: true,
                 path: 'images',
             },
-        };
-
+        }
         ImagePicker.showImagePicker(options, response => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
@@ -396,73 +366,48 @@ export class Main extends Component {
             } else if (response.customButton) {
                 console.log('User tapped custom button: ', response.customButton);
             } else {
-                const source = { uri: response.uri };
-
-                // You can also display the image using data:
-                // const source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-                this.setState({
-                    imgSource: source,
-                    imageUri: response.uri,
-                });
-                this.uploadImage(response.fileName);
+                ImageResizer.createResizedImage(Platform.OS === "android" ? response.path : response.uri, 300, 300, 'JPEG', 100)
+                    .then(({ uri }) => {
+                        this.setState({
+                            Map_image_uri: uri,
+                            map_image_file_name: response.fileName,
+                            new_upload_image: true
+                        })
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
             }
-        });
-    };
-    uploadImage = filename => {
-        this.setState({
-            loading: true
         })
-        var image = Platform.OS === 'ios' ? this.state.imageUri.replace('file://', '') : this.state.imageUri;
-        const Blob = RNFetchBlob.polyfill.Blob;
-        window.Blob = Blob;
-        const tempWindowXMLHttpRequest = window.XMLHttpRequest;
-        window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
-
-        let uploadBlob = null;
-        const imageRef = Firebase.storage()
-            .ref('GeoMaps')
-            .child('geo' + filename + (1 + Math.floor(Math.random() * 99)));
-        let mime = 'image/jpg';
-        RNFetchBlob.fs
-            .readFile(image, 'base64')
-            .then(data => {
-                return Blob.build(data, { type: `${mime};BASE64` });
-            })
-            .then(blob => {
-                uploadBlob = blob;
-                return imageRef.put(blob, { contentType: mime });
-            })
-            .then(() => {
-                uploadBlob.close();
-                return imageRef.getDownloadURL();
-            })
-            .then(url => {
-                // URL of the image uploaded on Firebase storage
-                console.log(url);
-                window.XMLHttpRequest = tempWindowXMLHttpRequest;
-                this.setState({ Map_iamge_URL: url, loading: false });
-            })
-            .catch(error => {
-                console.log('upload', error);
-                this.setState({
-                    loading: false
-                })
-            });
-    };
+    }
     onSelected(value) {
         this.setState({
             Selected: value,
         });
     }
-    onSubmit() {
+    onSubmit = async () => {
+        // เพิ่ม ข้อมูล แผนที่
         this.setState({
             loading: true,
         });
-        const { position, Map_iamge_URL, Geo_map_name, Geo_map_type, Geo_map_description, Area_ID, Area_PID, Area_DID, Area_SDID, Geo_map_time,
-            Geo_map_result_description } = this.state;
+        const { position, Map_image_URL, Geo_map_name, Geo_map_type, Important,
+            Geo_map_description, Area_ID, Area_PID, Area_DID, Area_SDID, Geo_map_time,
+            Geo_map_result_description, Map_image_name } = this.state;
 
-        if (!isEmptyValue(Map_iamge_URL)) {
+        let temp_Map_image_URL = '';
+        let new_id = '';
+        if (!isEmptyValue(this.state.edit_ID)) {
+            new_id = Map_image_name;
+        } else {
+            new_id = Date.now().toString();
+
+        }
+        if (this.state.new_upload_image) {
+            temp_Map_image_URL = await this.uploadImage(new_id)
+        } else {
+            temp_Map_image_URL = Map_image_URL;
+        }
+        if (!isEmptyValue(temp_Map_image_URL)) {
             if (
                 !isEmptyValue(position) &&
                 !isEmptyValue(Geo_map_name) &&
@@ -476,15 +421,17 @@ export class Main extends Component {
                         .update({
                             Geo_map_position: position,
                             Informer_name: this.state.Name,
-                            Create_date: GetCurrentDate('/'),
-                            Map_iamge_URL,
+                            Update_date: firestore.Timestamp.now(),
+                            Map_image_URL: temp_Map_image_URL,
                             Geo_map_name,
                             Geo_map_type,
-                            Geo_map_time,
-                            Geo_map_result_description,
+                            Map_image_name: new_id,
                             Geo_map_description,
-                            Informer_ID: this.state.User_ID,
-                            Area_ID, Area_PID, Area_DID, Area_SDID,
+                            Geo_map_time,
+                            Important,
+                            Geo_map_result_description,
+                            Informer_ID: this.state.uid,
+                            Area_ID,
                         })
                         .then(result => {
                             alert('อัพเดตสำเร็จ');
@@ -495,11 +442,14 @@ export class Main extends Component {
                                 Create_date: '',
                                 Geo_map_time: '',
                                 Geo_map_result_description: '',
-                                Map_iamge_URL: '',
+                                Map_image_URL: '',
+                                Map_image_uri: '',
+                                new_upload_image: false,
                                 mapAddData: false,
                                 maptable: false,
                                 edit_ID: '',
                                 loading: false,
+                                Important: false,
                             });
                         })
                         .catch(error => {
@@ -509,43 +459,55 @@ export class Main extends Component {
                             console.log(error);
                         });
                 } else {
-                    console.log('create geo');
-                    this.tbSocialMaps
-                        .add({
-                            Geo_map_position: position,
-                            Informer_name: this.state.Name,
-                            Create_date: GetCurrentDate('/'),
-                            Map_iamge_URL,
-                            Geo_map_name,
-                            Geo_map_type,
-                            Geo_map_description,
-                            Geo_map_time,
-                            Geo_map_result_description,
-                            Informer_ID: this.state.User_ID,
-                            Area_ID, Area_PID, Area_DID, Area_SDID,
-                        })
-                        .then(result => {
-                            alert('บันทึกสำเร็จ');
-                            this.setState({
-                                Geo_map_name: '',
-                                Geo_map_type: '',
-                                Geo_map_description: '',
-                                Geo_map_time: '',
-                                Geo_map_result_description: '',
-                                Create_date: '',
-                                Map_iamge_URL: '',
-                                mapAddData: false,
-                                maptable: false,
-                                edit_ID: '',
-                                loading: false,
+                    console.log('create geo', new_id);
+                    try {
+                        this.tbSocialMaps
+                            .doc(new_id)
+                            .set({
+                                Geo_map_position: position,
+                                Informer_name: this.state.Name,
+                                Create_date: firestore.Timestamp.now(),
+                                Map_image_URL: temp_Map_image_URL,
+                                Geo_map_name,
+                                Geo_map_type,
+                                Map_image_name: new_id,
+                                Geo_map_description,
+                                Geo_map_time,
+                                Important,
+                                Geo_map_result_description,
+                                Informer_ID: this.state.uid,
+                                Area_ID,
+                            })
+                            .then(result => {
+                                alert('บันทึกสำเร็จ');
+                                this.setState({
+                                    Geo_map_name: '',
+                                    Geo_map_type: '',
+                                    Geo_map_description: '',
+                                    Geo_map_time: '',
+                                    Geo_map_result_description: '',
+                                    Create_date: '',
+                                    Map_image_URL: '',
+                                    Map_image_uri: '',
+                                    new_upload_image: false,
+                                    mapAddData: false,
+                                    maptable: false,
+                                    edit_ID: '',
+                                    loading: false,
+                                    Important: false,
+                                });
+                            })
+                            .catch(error => {
+                                console.log(error);
+                                this.setState({
+
+                                    loading: false,
+                                });
+
                             });
-                        })
-                        .catch(error => {
-                            this.setState({
-                                loading: false,
-                            });
-                            console.log(error);
-                        });
+                    } catch (error) {
+                        console.log(error);
+                    }
                 }
             } else {
                 this.setState({
@@ -569,8 +531,10 @@ export class Main extends Component {
             position: data.Geo_map_position,
             Geo_map_type: data.Geo_map_type,
             Geo_map_description: data.Geo_map_description,
-            Map_iamge_URL: data.Map_iamge_URL,
+            Map_image_URL: data.Map_image_URL,
             Geo_map_time: data.Geo_map_time,
+            Map_image_name: data.Map_image_name,
+            Important: data.Important,
             Geo_map_result_description: data.Geo_map_result_description,
             maptable: false,
             mapAddData: true,
@@ -578,60 +542,62 @@ export class Main extends Component {
             uploaded: true,
         });
     }
-    delete(id) {
-        const searchRef = firestore()
-            .collection('SOCIAL_MAPS')
-            .doc(id);
-        searchRef.get().then(doc => {
-            // console.log(this.state.Role)
-            if (this.state.User_ID === doc.data().Informer_ID || this.state.Role === 'admin') {
-                if (doc.exists && doc.data().Map_iamge_URL !== '') {
-                    var desertRef = Firebase.storage().refFromURL(
-                        doc.data().Map_iamge_URL,
+    delete(data) {
+
+        if (this.state.uid === data.Informer_ID || this.state.Role === 'admin') {
+            if (isEmptyValue(data.Map_image_URL) === false) {
+                var desertRef = Storage().refFromURL(
+                    data.Map_image_URL,
+                );
+                desertRef.delete().then(function () {
+                    console.log('delete geomap and image sucess');
+
+
+                }).catch(function (error) {
+                    console.log(
+                        'image No such document!' + error,
                     );
-                    desertRef.delete().then(function () {
-                        console.log('delete geomap and image sucess');
-                    }).catch(function (error) {
-                        console.log(
-                            'image No such document!' + doc.data().areaImageName,
-                        );
-                    });
-                } else {
-                    console.log('geomap image  No such document!' + id);
-                }
-                firestore().collection('SOCIAL_MAPS').doc(id).delete().then(() => {
-                    console.log('Document successfully deleted!');
-                    this.setState({
-                        Geo_map_name: '',
-                        Geo_map_type: '',
-                        Geo_map_description: '',
-                        Informer_ID: '',
-                        Create_date: '',
-                        Map_iamge_URL: '',
-                        Geo_map_time: '',
-                        Geo_map_result_description: '',
-                        status_add: false,
-                        edit_ID: '',
-                    });
-                })
-                    .catch(error => {
-                        console.error('Error removing document: ', error);
-                    });
+                });
             } else {
-                console.log('can not delete');
-                alert('คุณไม่มีสิทธิ์ลบข้อมูลนี้');
+                console.log('geomap image  No such document!' + data.Key);
             }
-        });
+
+            this.tbSocialMaps.doc(data.Key).delete().then(() => {
+                console.log('Document successfully deleted!');
+                this.setState({
+                    Geo_map_name: '',
+                    Geo_map_type: '',
+                    Geo_map_description: '',
+                    Informer_ID: '',
+                    Create_date: '',
+                    Map_image_URL: '',
+                    Map_image_uri: '',
+                    new_upload_image: false,
+                    Geo_map_time: '',
+                    Geo_map_result_description: '',
+                    status_add: false,
+                    edit_ID: '',
+                    Important: false
+                });
+            })
+                .catch(error => {
+                    console.error('Error removing document: ', error);
+                });
+
+        } else {
+            console.log('can not delete');
+            alert('คุณไม่มีสิทธิ์ลบข้อมูลนี้');
+        }
+
     }
-
-
-
-
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Main)
+    }
     render() {
         const { Selected } = this.state;
-        const { Geo_map_name, Geo_map_type, Geo_map_description, Geo_map_time, Geo_map_result_description } = this.state;
-        const { Provinces, Districts, Sub_districts, Bans } = this.state;
-        const { Area_ID, User_ID, Area_PID, Area_DID, Area_SDID, } = this.state;
+        const { Geo_map_name, Geo_map_type,
+            Geo_map_description, Geo_map_time, Important,
+            Geo_map_result_description, Map_image_URL, Map_image_uri } = this.state;
         const mstyle = StyleSheet.create({
             map: {
                 ...StyleSheet.absoluteFillObject,
@@ -644,354 +610,340 @@ export class Main extends Component {
             },
         });
 
-        if (this.state.loading) {
-            return <Loading></Loading>;
-        } else if (this.state.page === 'Main') {
-            return (
-                <Container style={{ backgroundColor: "#e4e4e4" }}>
-                    {/* main show */}
-
-                    {Selected === 1 ? (
-                        this.state.maptable ? (
-                            <Content>
-                                <View style={{ flex: 1, alignItems: 'center', margin: 10 }}>
+        return (
+            <Container >
+                <PDHeader name={'เพิ่มข้อมูลชุมชน'} backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                {/* main show */}
+                {Selected === 1 ? (
+                    this.state.maptable ? (
+                        <Content contentContainerStyle={{ padding: 15 }}>
+                            <View style={{ flex: 1, alignItems: 'center', margin: 10 }}>
+                                <Text
+                                    style={{
+                                        fontWeight: 'bold',
+                                        textAlign: 'center',
+                                        margin: 5,
+                                        fontSize: 18,
+                                    }}>
+                                    ตารางข้อมูล</Text>
+                                <View
+                                    style={{
+                                        flex: 1,
+                                        flexDirection: 'row',
+                                        borderBottomWidth: 1,
+                                        marginBottom: 5,
+                                    }}>
                                     <Text
                                         style={{
                                             fontWeight: 'bold',
+                                            margin: 10,
+                                            width: '20%',
                                             textAlign: 'center',
-                                            margin: 5,
-                                            fontSize: 18,
                                         }}>
-                                        ตารางข้อมูล</Text>
-                                    <View
+                                        ชื่อพื้นที่</Text>
+                                    <Text
                                         style={{
-                                            flex: 1,
-                                            flexDirection: 'row',
-                                            borderBottomWidth: 1,
-                                            marginBottom: 5,
+                                            fontWeight: 'bold',
+                                            margin: 10,
+                                            width: '20%',
+                                            textAlign: 'center',
                                         }}>
-                                        <Text
-                                            style={{
-                                                fontWeight: 'bold',
-                                                margin: 10,
-                                                width: '20%',
-                                                textAlign: 'center',
-                                            }}>
-                                            ชื่อพื้นที่</Text>
-                                        <Text
-                                            style={{
-                                                fontWeight: 'bold',
-                                                margin: 10,
-                                                width: '20%',
-                                                textAlign: 'center',
-                                            }}>
-                                            ลักษณะพื้นที่</Text>
-                                        <Text
-                                            style={{
-                                                fontWeight: 'bold',
-                                                margin: 10,
-                                                width: '20%',
-                                                textAlign: 'center',
-                                            }}>
-                                            ผู้เพิ่มข้อมูล</Text>
-                                        <Text
-                                            style={{
-                                                fontWeight: 'bold',
-                                                margin: 10,
-                                                width: '20%',
-                                                textAlign: 'center',
-                                            }}>
-                                            แก้ไข</Text>
-                                    </View>
-                                    <ScrollView>
-                                        {this.state.geoMaps.map((element, i) => (
-                                            <View key={i} style={{ flex: 1, flexDirection: 'row' }}>
-                                                <Text
-                                                    style={{
-                                                        margin: 10,
-                                                        width: '20%',
-                                                        textAlign: 'center',
-                                                    }}>
-                                                    {element.Geo_map_name}
-                                                </Text>
-                                                <Text
-                                                    style={{
-                                                        margin: 10,
-                                                        width: '20%',
-                                                        textAlign: 'center',
-                                                    }}>
-                                                    {element.name_type}
-                                                </Text>
-                                                <Text
-                                                    style={{
-                                                        margin: 10,
-                                                        width: '20%',
-                                                        textAlign: 'center',
-                                                    }}>
-                                                    {element.Informer_name}
-                                                </Text>
-                                                <View
-                                                    style={{
-                                                        flexDirection: 'row',
-                                                        width: '20%',
-                                                        margin: 10,
-                                                    }}>
-                                                    <TouchableOpacity
-                                                        onPress={this.edit.bind(
-                                                            this,
-                                                            element,
-                                                            element.Key,
-                                                        )}>
-                                                        <Image
-                                                            source={require('../assets/pencil.png')}
-                                                            style={{
-                                                                width: 25,
-                                                                height: 25,
-                                                                justifyContent: 'center',
-                                                            }}></Image>
-                                                    </TouchableOpacity>
-                                                    <TouchableOpacity
-                                                        onPress={this.delete.bind(this, element.Key)}>
-                                                        <Image
-                                                            source={require('../assets/trash_can.png')}
-                                                            style={{
-                                                                width: 25,
-                                                                height: 25,
-                                                                justifyContent: 'center',
-                                                            }}></Image>
-                                                    </TouchableOpacity>
-                                                </View>
-                                            </View>
-                                        ))}
-                                    </ScrollView>
+                                        ลักษณะพื้นที่</Text>
+                                    <Text
+                                        style={{
+                                            fontWeight: 'bold',
+                                            margin: 10,
+                                            width: '20%',
+                                            textAlign: 'center',
+                                        }}>
+                                        ผู้เพิ่มข้อมูล</Text>
+                                    <Text
+                                        style={{
+                                            fontWeight: 'bold',
+                                            margin: 10,
+                                            width: '20%',
+                                            textAlign: 'center',
+                                        }}>
+                                        แก้ไข</Text>
                                 </View>
-                            </Content>
-                        ) : this.state.mapAddData ? (
-                            <Content style={{ padding: 20 }}>
-                                <View style={{ flex: 1, alignItems: 'center', marginBottom: 20 }}>
-                                    <Text style={styles.title}>เพิ่มข้อมูล</Text>
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <Text style={{ color: 'red' }}>*</Text>
-                                        <Text>กรุณากดเลือกพิกัดก่อนการเพิ่ม</Text>
-                                    </View>
+                                <ScrollView>
+                                    {this.state.geoMaps.map((element, i) => (
+                                        <View key={i} style={{ flex: 1, flexDirection: 'row' }}>
+                                            <Text
+                                                style={{
+                                                    margin: 10,
+                                                    width: '20%',
+                                                    textAlign: 'center',
+                                                }}>
+                                                {element.Geo_map_name}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    margin: 10,
+                                                    width: '20%',
+                                                    textAlign: 'center',
+                                                }}>
+                                                {element.name_type}
+                                            </Text>
+                                            <Text
+                                                style={{
+                                                    margin: 10,
+                                                    width: '20%',
+                                                    textAlign: 'center',
+                                                }}>
+                                                {element.Informer_name}
+                                            </Text>
+                                            <View style={{ width: '20%', justifyContent: 'center', flexDirection: 'row' }}>
+                                                <TouchableOpacity
+                                                    onPress={this.edit.bind(this, element, element.Key,)}>
+                                                    <Image
+                                                        source={require('../assets/pencil.png')}
+                                                        style={{ width: 25, height: 25, justifyContent: 'center', }}></Image>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    onPress={this.delete.bind(this, element)}>
+                                                    <Image
+                                                        source={require('../assets/trash_can.png')}
+                                                        style={{ width: 25, height: 25, justifyContent: 'center', }}></Image>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+                                    ))}
+                                </ScrollView>
+                            </View>
+                        </Content>
+                    ) : this.state.mapAddData ? (
+                        <Content contentContainerStyle={{ padding: 15 }}>
+                            <View style={{ flex: 1, alignItems: 'center', marginBottom: 20 }}>
+                                <Text style={styles.title}>เพิ่มข้อมูล</Text>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <Text style={{ color: 'red' }}>*</Text>
+                                    <Text>กรุณากดเลือกพิกัดก่อนการเพิ่ม</Text>
+                                </View>
+                                <Item fixedLabel>
+                                    <Label>พิกัดที่เลือก<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                                    <Label>{this.state.position.lat}</Label>
+                                    <Label>{this.state.position.lng}</Label>
+                                </Item>
+                                <Item fixedLabel>
+                                    <Label>ชื่อพื้นที่<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                                    <Input
+                                        style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                        value={Geo_map_name}
+                                        onChangeText={str => this.setState({ Geo_map_name: str })}
+                                    />
+                                </Item>
+                                <Item fixedLabel>
+                                    <Label>ประเภท<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                                    <Picker
+                                        style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                        selectedValue={Geo_map_type}
+                                        onValueChange={str => this.setState({ Geo_map_type: str })}>
+                                        <Picker.Item key="0" label="เลือกประเภท" value="" />
+                                        <Picker.Item key="1" value="home" label="บ้าน" />
+                                        <Picker.Item
+                                            key="2"
+                                            value="resource"
+                                            label="แหล่งทรัพยากร"
+                                        />
+                                        <Picker.Item key="3" value="organization" label="องค์กร" />
+                                        <Picker.Item key="4" value="flag_good" label="จุดดี" />
+                                        <Picker.Item
+                                            key="5"
+                                            value="flag_danger"
+                                            label="จุดเสี่ยง"
+                                        />
+                                        <Picker.Item
+                                            key="6"
+                                            value="accident"
+                                            label="จุดอุบัติเหตุ"
+                                        />
+                                    </Picker>
+                                </Item>
+                                {Geo_map_type === 'home' &&
                                     <Item fixedLabel>
-                                        <Label>พิกัดที่เลือก :</Label>
-                                        <Label>{this.state.position.lat}</Label>
-                                        <Label>{this.state.position.lng}</Label>
+                                        <Label>เพิ่มประวัติบุคคล :</Label>
+                                        <Radio selected={!Important} onPress={() => this.setState({ Important: false })}></Radio>
+                                        <Text>ไม่เพิ่ม</Text>
+                                        <Radio selected={Important} onPress={() => this.setState({ Important: true })}></Radio>
+                                        <Text>เพิ่ม</Text>
                                     </Item>
+
+                                }
+                                {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+
                                     <Item fixedLabel>
-                                        <Label>ชื่อพื้นที่ :</Label>
+
+                                        <Label>เวลาที่เกิดเหตุ<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <Input
                                             style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                            value={Geo_map_name}
-                                            onChangeText={str => this.setState({ Geo_map_name: str })}
+                                            value={Geo_map_time}
+                                            keyboardType='number-pad'
+                                            onChangeText={str => this.setState({ Geo_map_time: str })}
+                                            placeholder="00:00"
                                         />
-                                    </Item>
-                                    <Item fixedLabel>
-                                        <Label>ประเภท :</Label>
-                                        <Picker
+
+                                    </Item>}
+                                {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+                                    <Item stackedLabel>
+                                        <Label>ลักษณะกิจกรรม<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                                        <Textarea
                                             style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                            selectedValue={Geo_map_type}
-                                            onValueChange={str => this.setState({ Geo_map_type: str })}>
-                                            <Picker.Item key="0" label="เลือกประเภท" value="" />
-                                            <Picker.Item key="1" value="home" label="บ้าน" />
-                                            <Picker.Item
-                                                key="2"
-                                                value="resource"
-                                                label="แหล่งทรัพยากร"
-                                            />
-                                            <Picker.Item key="3" value="organization" label="องค์กร" />
-                                            <Picker.Item key="4" value="flag_good" label="จุดดี" />
-                                            <Picker.Item
-                                                key="5"
-                                                value="flag_danger"
-                                                label="จุดเสี่ยง"
-                                            />
-                                            <Picker.Item
-                                                key="6"
-                                                value="accident"
-                                                label="จุดอุบัติเหตุ"
-                                            />
-                                        </Picker>
-                                    </Item>
-
-                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
-
-                                        <Item fixedLabel>
-
-                                            <Label>เวลาที่เกิดเหตุ :</Label>
-                                            <Input
-                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                                value={Geo_map_time}
-                                                keyboardType='number-pad'
-                                                onChangeText={str => this.setState({ Geo_map_time: str })}
-                                                placeholder="00:00"
-                                            />
-
-                                        </Item>}
-                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
-                                        <Item stackedLabel>
-                                            <Label>ลักษณะกิจกรรม :</Label>
-                                            <Textarea
-                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                                rowSpan={4}
-                                                value={Geo_map_description}
-                                                onChangeText={str =>
-                                                    this.setState({ Geo_map_description: str })
-                                                }
-                                                placeholder="ลักษณะกิจกรรมที่เกิดขึ้นบนพื้นที่ เกิดเหตุการณ์อะไร อย่างไร"
-                                            />
-                                        </Item>}
-                                    {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
-                                        <Item stackedLabel>
-                                            <Label>ผลที่เกิดขึ้น :</Label>
-                                            <Textarea
-                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                                rowSpan={4}
-                                                value={Geo_map_result_description}
-                                                onChangeText={str =>
-                                                    this.setState({ Geo_map_result_description: str })
-                                                }
-                                                placeholder="จากกิจกรรมบนพื้นที่ มีผลที่เกิดขึ้นยังไงบ้าง เช่น การรวมตัวของวัยรุ่นหลังวัดที่เสพสารเสพติด ทำให้เกิดเด็กติดยาและเกิดการลักขโมย"
-                                            />
-                                        </Item>}
+                                            rowSpan={4}
+                                            value={Geo_map_description}
+                                            onChangeText={str =>
+                                                this.setState({ Geo_map_description: str })
+                                            }
+                                            placeholder="ลักษณะกิจกรรมที่เกิดขึ้นบนพื้นที่ เกิดเหตุการณ์อะไร อย่างไร"
+                                        />
+                                    </Item>}
+                                {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
+                                    <Item stackedLabel>
+                                        <Label>ผลที่เกิดขึ้น<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                                        <Textarea
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                            rowSpan={4}
+                                            value={Geo_map_result_description}
+                                            onChangeText={str =>
+                                                this.setState({ Geo_map_result_description: str })
+                                            }
+                                            placeholder="จากกิจกรรมบนพื้นที่ มีผลที่เกิดขึ้นยังไงบ้าง เช่น การรวมตัวของวัยรุ่นหลังวัดที่เสพสารเสพติด ทำให้เกิดเด็กติดยาและเกิดการลักขโมย"
+                                        />
+                                    </Item>}
 
 
-                                    {(Geo_map_type !== 'flag_danger' && Geo_map_type !== 'flag_good') &&
-                                        <Item stackedLabel>
-                                            <Label>คำอธิบาย :</Label>
+                                {(Geo_map_type !== 'flag_danger' && Geo_map_type !== 'flag_good') &&
+                                    <Item stackedLabel>
+                                        <Label>คำอธิบาย<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
 
-                                            <Textarea
-                                                style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                                rowSpan={4}
-                                                value={Geo_map_description}
-                                                onChangeText={str =>
-                                                    this.setState({ Geo_map_description: str })
-                                                }
-                                                placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
-                                            />
-                                        </Item>}
+                                        <Textarea
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                            rowSpan={4}
+                                            value={Geo_map_description}
+                                            onChangeText={str =>
+                                                this.setState({ Geo_map_description: str })
+                                            }
+                                            placeholder="คำอธิบาย ของ บุคคล สถานที่ หรือกิจกรรมที่เกิดขึ้นบนพื้นที่"
+                                        />
+                                    </Item>}
 
-                                    {this.state.Map_iamge_URL === '' ? (
-                                        <View></View>
-                                    ) : (
-                                            <Image
-                                                source={{ uri: this.state.Map_iamge_URL }}
-                                                style={{ height: 100, width: 100 }}></Image>
-                                        )}
-                                    <View style={{ flexDirection: 'row' }}>
-                                        <Button
-                                            info
-                                            style={{ margin: 10 }}
-                                            onPress={this.handleChoosePhoto.bind(this)}>
-                                            <Icon name="plus" type="AntDesign" />
-                                            <Text>เพิ่มรูปพื้นที่</Text>
-                                        </Button>
-                                        <Button
-                                            success
-                                            style={{ margin: 10 }}
-                                            onPress={this.onSubmit.bind(this)}>
-                                            <Icon name="save" type="AntDesign" />
-                                            <Text>บันทึก</Text>
-                                        </Button>
-                                    </View>
-                                    <View>
-                                        <Button
-                                            danger
-                                            style={{ marginTop: 10 }}
-                                            onPress={this.cancel.bind(this)}>
-                                            <Icon name="left" type="AntDesign" />
-                                            <Text>กลับ</Text>
-                                        </Button>
-                                    </View>
+                                {isEmptyValue(Map_image_uri) === false ?
+                                    <Image
+                                        source={{ uri: Map_image_uri }}
+                                        style={{ height: 100, width: 100 }}></Image>
+                                    : isEmptyValue(Map_image_URL) === false ?
+                                        <Image
+                                            source={{ uri: Map_image_URL }}
+                                            style={{ height: 100, width: 100 }}></Image> : <></>
+                                }
+                                <View style={{ flexDirection: 'row' }}>
+                                    <Button
+                                        info
+                                        style={{ margin: 10 }}
+                                        onPress={this._handleChoosePhoto}>
+                                        <Icon name="plus" type="AntDesign" />
+                                        <Text>เพิ่มรูปพื้นที่</Text>
+                                    </Button>
+                                    <Button
+                                        danger
+                                        style={{ marginTop: 10 }}
+                                        onPress={this.cancel.bind(this)}>
+                                        <Icon name="left" type="AntDesign" />
+                                        <Text>กลับ</Text>
+                                    </Button>
 
-                                    <View style={{ height: 20 }}></View>
                                 </View>
-                            </Content>
-                        ) : (
-                                    <MapView
-                                        onPress={this.onMapPress.bind(this)}
-                                        style={mstyle.map}
-                                        zoomEnabled={true}
-                                        toolbarEnabled={true}
-                                        showsUserLocation={true}
-                                        showsScale={true}
-                                        zoomTapEnabled={true}
-                                        zoomControlEnabled={true}
-                                        {...this.getgeolocation}
+                                <View style={{ flexDirection: 'row' }}>
 
-
-                                    >
-                                        <Marker
-                                            coordinate={{
-                                                latitude: this.state.position.lat,
-                                                longitude: this.state.position.lng,
-                                            }}></Marker>
-
-
-                                        {this.state.listshowMarker}
-                                    </MapView>
-
-                                )
+                                    <Button
+                                        success
+                                        style={{ margin: 10 }}
+                                        onPress={this.onSubmit.bind(this)}>
+                                        <Icon name="save" type="AntDesign" />
+                                        <Text>บันทึก</Text>
+                                    </Button>
+                                </View>
+                                <View style={{ height: 20 }}></View>
+                            </View>
+                        </Content>
                     ) : (
-                            <View></View>
-                        )}
+                                // แสดงแผนที่ หน้าหลัก
+                                <MapView
+                                    onPress={this.onMapPress.bind(this)}
+                                    style={mstyle.map}
+                                    zoomEnabled={true}
+                                    toolbarEnabled={true}
+                                    showsUserLocation={true}
+                                    showsScale={true}
+                                    zoomTapEnabled={true}
+                                    zoomControlEnabled={true}
+                                    {...this.getgeolocation}
+
+
+                                >
+                                    <Marker
+                                        coordinate={{
+                                            latitude: this.state.position.lat,
+                                            longitude: this.state.position.lng,
+                                        }}></Marker>
+
+
+                                    {this.state.listshowMarker}
+                                </MapView>
+
+                            )
+                ) : (
+                        <View></View>
+                    )}
 
 
 
 
-                    {/* footer tab */}
-                    <Footer style={{ backgroundColor: '#ffffff' }}>
-                        <TouchableOpacity
-                            style={{ justifyContent: 'center', flexDirection: 'row', alignItems: 'center' }}
-                            onPress={this.findCoordinates}>
-                            <Icon name="enviroment" type="AntDesign"></Icon>
-                            <Text>
-                                เลือกพิกัดที่อยู่ตอนนี้
+                {/* footer tab */}
+                <Footer style={{ backgroundColor: '#ffffff' }}>
+                    <TouchableOpacity
+                        style={{ justifyContent: 'center', flexDirection: 'row', alignItems: 'center' }}
+                        onPress={this.findCoordinates}>
+                        <Icon name="enviroment" type="AntDesign"></Icon>
+                        <Text>
+                            เลือกพิกัดที่อยู่ตอนนี้
                           </Text>
 
-                        </TouchableOpacity>
-                    </Footer>
-                    <Footer style={{ backgroundColor: '#ffffff' }}>
-                        {/* <TouchableOpacity style={{ justifyContent: 'center' }} onPress={this.findCoordinates.bind(this)} >
-                                <Text style={{ textAlign: 'center', marginLeft: 5, marginRight: 5 }}>พิกัดที่เราอยู่</Text>
-                            </TouchableOpacity> */}
-                        <View style={{ justifyContent: 'center', marginRight: 10 }}>
-                            {!isEmptyValue(this.state.Ban_name) && <Text>
-                                {this.state.Ban_name} หมู่ที่ {this.state.Area_ID + 1}
-                            </Text>}
-                        </View>
-                        <TouchableOpacity
-                            style={{ justifyContent: 'center' }}
-                            onPress={this.cancel.bind(this)}>
-                            <Image
-                                source={require('../assets/maps.png')}
-                                style={{ width: 50, height: 50 }}></Image>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={{ justifyContent: 'center' }}
-                            onPress={() =>
-                                this.setState({ maptable: true, mapAddData: false })
-                            }>
-                            <Image
-                                source={require('../assets/table.png')}
-                                style={{ width: 60, height: 60 }}></Image>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={this.onSelected.bind(this, 1)}
-                            onPress={() =>
-                                this.setState({ maptable: false, mapAddData: true })
-                            }>
-                            <Image
-                                source={require('../assets/add.png')}
-                                style={{ width: 50, height: 50 }}></Image>
-                        </TouchableOpacity>
-                    </Footer>
+                    </TouchableOpacity>
+                </Footer>
+                <Footer style={{ backgroundColor: '#ffffff', justifyContent: "space-around" }}>
+                    <TouchableOpacity
+                        style={{ justifyContent: 'center' }}
+                        onPress={this.cancel.bind(this)}>
+                        <Image
+                            source={require('../assets/maps.png')}
+                            style={{ width: 50, height: 50 }}></Image>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={{ justifyContent: 'center' }}
+                        onPress={() =>
+                            this.setState({ maptable: true, mapAddData: false })
+                        }>
+                        <Image
+                            source={require('../assets/table.png')}
+                            style={{ width: 60, height: 60 }}></Image>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={this.onSelected.bind(this, 1)}
+                        onPress={() =>
+                            this.setState({ maptable: false, mapAddData: true })
+                        }>
+                        <Image
+                            source={require('../assets/add.png')}
+                            style={{ width: 50, height: 50 }}></Image>
+                    </TouchableOpacity>
+                </Footer>
 
 
-                </Container >
-            );
-        }
+            </Container >
+        );
+
     }
 }
 

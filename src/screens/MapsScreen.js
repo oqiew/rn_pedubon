@@ -6,14 +6,16 @@ import Loading from '../components/Loading';
 import { Container, Content, Footer, FooterTab, Grid, Col, Icon } from 'native-base'
 import styles from '../styles/main.styles';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
-
-import Firebase from '../Firebase';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
+import { TableName } from '../Database/constan';
+import { routeName } from '../routes/RouteConstant';
+import PDHeader from '../components/header';
+import themeStyle from '../styles/theme.style';
 export class MapsScreen extends Component {
     constructor(props) {
         super(props)
-        this.tbSocialMaps = firestore().collection('SOCIAL_MAPS');
+        this.tbSocialMaps = firestore().collection(TableName.Social_maps);
         this.state = {
             loading: false,
             //maps
@@ -39,7 +41,7 @@ export class MapsScreen extends Component {
             // console.log(doc.data())
             const {
                 Geo_map_position,
-                Map_iamge_URL,
+                Map_image_URL,
                 Geo_map_name,
                 Geo_map_type,
                 Geo_map_description,
@@ -77,7 +79,7 @@ export class MapsScreen extends Component {
                             longitude: Geo_map_position.lng,
                         }}
                         description={Geo_map_description}
-                    // image={Map_iamge_URL}
+                    // image={Map_image_URL}
                     // icon={icon_m}
 
                     // label={count}
@@ -124,6 +126,9 @@ export class MapsScreen extends Component {
             loading: false,
         });
     };
+    onBack = () => {
+        this.props.navigation.navogate(routeName.Main)
+    }
     render() {
         const mstyle = StyleSheet.create({
             map: {
@@ -136,44 +141,33 @@ export class MapsScreen extends Component {
                 flex: 1,
             },
         });
-        if (this.state.loading) {
-            return <Loading></Loading>
-        } else {
-
-
-            return (
-                <Container>
-
-                    <MapView
-                        // onPress={this.onMapPress.bind(this)}
-                        style={mstyle.map}
-                        // provider={PROVIDER_GOOGLE}
-                        zoomEnabled={true}
-                        toolbarEnabled={true}
-                        showsUserLocation={true}
-                        showsScale={true}
-                        zoomTapEnabled={true}
-                        zoomControlEnabled={true}
-                        initialRegion={{
-                            latitude: this.state.position.lat,
-                            longitude: this.state.position.lng,
-                            latitudeDelta: 0.0922,
-                            longitudeDelta: 0.0421,
-                        }}
-                    >
-                        {this.state.listshowMarker}
-                    </MapView>
-
-
-                    <Footer>
-                        <FooterTab style={styles.footer}>
-
-                        </FooterTab>
-                    </Footer>
-                </Container>
-            )
-        }
+        return (
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name={'แผนที่ข้อมูล'} backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                <MapView
+                    // onPress={this.onMapPress.bind(this)}
+                    style={mstyle.map}
+                    // provider={PROVIDER_GOOGLE}
+                    zoomEnabled={true}
+                    toolbarEnabled={true}
+                    showsUserLocation={true}
+                    showsScale={true}
+                    zoomTapEnabled={true}
+                    zoomControlEnabled={true}
+                    initialRegion={{
+                        latitude: this.state.position.lat,
+                        longitude: this.state.position.lng,
+                        latitudeDelta: 0.0922,
+                        longitudeDelta: 0.0421,
+                    }}
+                >
+                    {this.state.listshowMarker}
+                </MapView>
+            </Container>
+        )
     }
+
 }
 
 const mapStateToProps = state => ({

@@ -1,20 +1,24 @@
 import React, { Component } from 'react'
-import { View, ScrollView, TouchableOpacity, Image, Alert } from 'react-native'
+import { View, TouchableOpacity, Image, Alert } from 'react-native'
 import Timeline from 'react-native-timeline-flatlist'
-import Idelete from '../assets/trash_can.png';
-import Iedit from '../assets/pencil.png';
 import styles from '../styles/main.styles';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Text, Icon, Button } from 'native-base';
 import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../components/Methods';
-import Firebase from '../Firebase';
 import firestore from '@react-native-firebase/firestore';
+import { TableName } from '../Database/constan';
+import { routeName } from '../routes/RouteConstant';
+import themeStyle from '../styles/theme.style';
+import Loading from '../components/Loading';
+import PDHeader from '../components/header';
 export class PersonHistoryScreen extends Component {
     constructor(props) {
         super(props);
 
-        this.tbPersonHistorys = firestore().collection('PERSON_HISTORYS');
+        this.tbPersonHistorys = firestore()
+            .collection(TableName.Social_maps).doc(this.props.route.params.id)
+            .collection(TableName.Person_historys);
         //getl);
         this.state = {
             dataTimeline: [],
@@ -37,6 +41,7 @@ export class PersonHistoryScreen extends Component {
 
             //select
             selected: 1,
+            loading: false
 
         }
 
@@ -45,14 +50,10 @@ export class PersonHistoryScreen extends Component {
         this.authListener();
     }
     authListener() {
-        if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Home');
+        if (isEmptyValue(this.state.uid)) {
+            this.props.navigation.navigate(routeName.Home);
         } else {
-            const Person_ID = this.props.route.params.id;
-            // this.props.navigation.getParam('id', 'default value');
-            this.unsubscribe = this.tbPersonHistorys
-                .where('Person_ID', '==', Person_ID)
-                .onSnapshot(this.onCollectionUpdate);
+            this.tbPersonHistorys.onSnapshot(this.onCollectionUpdate);
         }
     }
     delete(id) {
@@ -63,16 +64,12 @@ export class PersonHistoryScreen extends Component {
             console.error("Error removing document: ", error);
         });
     }
-    edit(id) {
-        this.tbPersonHistorys.doc(id).get().then((doc) => {
-            const { Name_activity, Description, Year_start } = doc.data();
-            this.setState({
-                Name_activity, Description, Year_start, edit_ID: id, selected: 3
-            })
+    edit(data) {
+        const { Name_activity, Description, Year_start } = data;
+        this.setState({
+            Name_activity, Description, Year_start, edit_ID: data.Key, selected: 3
+        })
 
-        }).catch((error) => {
-            console.error("Error document: ", error);
-        });
     }
     cancelEdit = (e) => {
         this.setState({
@@ -80,7 +77,9 @@ export class PersonHistoryScreen extends Component {
         })
     }
     onCollectionUpdate = (querySnapshot) => {
-
+        this.setState({
+            loading: true
+        })
         const dataTimeline = [];
         const localHistorys = [];
         var count = 1;
@@ -129,7 +128,8 @@ export class PersonHistoryScreen extends Component {
         });
 
         this.setState({
-            dataTimeline
+            dataTimeline,
+            loading: false
         });
 
     }
@@ -152,75 +152,96 @@ export class PersonHistoryScreen extends Component {
         const state = this.state
         state[e.target.name] = e.target.value;
         this.setState(state);
-
-
-
     }
 
     onSubmit = e => {
         e.preventDefault();
+        this.setState({
+            loading: true
+        })
         const Person_ID = this.props.route.params.id;
 
-        const { Name_activity, Description, Year_start, Name, User_ID, edit_ID } = this.state;
+        const { Name_activity, Description, Year_start, Name, uid, edit_ID } = this.state;
         if (Year_start.length < 4) {
             Alert.alert('บันทึกไม่สำเร็จ ปีไม่ถูกต้อง');
+            this.setState({
+                loading: false
+            })
 
         } else if (Name_activity === '' || Description === '' || Year_start === '') {
             Alert.alert('บันทึกไม่สำเร็จ กรุณากรอกข้อมูลให้ครบ');
-
+            this.setState({
+                loading: false
+            })
         } else {
-            if (edit_ID !== '') {
+            if (!isEmptyValue(edit_ID)) {
                 this.tbPersonHistorys.doc(edit_ID).set({
                     Name_activity, Description
-                    , Year_start, Informer_ID: User_ID, Informer_name: Name
+                    , Year_start, Informer_ID: uid, Informer_name: Name
                     , Person_ID
                 }).then((docRef) => {
                     Alert.alert('บันทึกข้อมูลสำเร็จ');
                     this.setState({
                         Name_activity: "", Year_start: "", Description: "", edit_ID: '',
-                        selected: 1,
+                        selected: 1, loading: false
                     });
 
-                })
-                    .catch((error) => {
-                        Alert.alert('บันทึกข้อมูลไม่สำเร็จ');
-                        console.error("Error adding document: ", error);
-                    });
+
+                }).catch((error) => {
+                    Alert.alert('บันทึกข้อมูลไม่สำเร็จ');
+                    console.error("Error adding document: ", error);
+                    this.setState({
+                        loading: false
+                    })
+                });
             } else {
                 this.tbPersonHistorys.add({
                     Name_activity, Description
-                    , Year_start, Informer_ID: User_ID, Informer_name: Name
+                    , Year_start, Informer_ID: uid, Informer_name: Name
                     , Person_ID
                 }).then((docRef) => {
                     Alert.alert('บันทึกมูลสำเร็จ');
                     this.setState({
                         Name_activity: "", Year_start: "", Description: "",
-                        selected: 1,
+                        selected: 1, loading: false
                     });
 
-                })
-                    .catch((error) => {
-                        Alert.alert('บันทึกมูลไม่สำเร็จ');
-                        console.error("Error adding document: ", error);
-                    });
+                }).catch((error) => {
+                    Alert.alert('บันทึกมูลไม่สำเร็จ');
+                    console.error("Error adding document: ", error);
+                    this.setState({
+                        loading: false
+                    })
+                });
             }
         }
     }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Persons)
+    }
     render() {
-        const { Name_activity, Description, Year_start } = this.state;
+        const { Name_activity, Description, Year_start, dataTimeline } = this.state;
         return (
-            <Container>
-                <Text style={styles.title}>ประวัติชีวิต {this.props.route.params.name}</Text>
-                {this.state.selected === 1 ?
-                    <Timeline
-                        lineColor='rgb(45,156,219)'
-                        timeStyle={{ color: 'red', }}
-                        descriptionStyle={{ color: 'gray' }}
-                        data={this.state.dataTimeline}
-                    /> : <View></View>
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <Loading visible={this.state.loading}></Loading>
+                <PDHeader name={"ประวัติชีวิต" + this.props.route.params.name} backHandler={this.onBack}></PDHeader>
+
+                {this.state.selected === 1 &&
+                    (dataTimeline.length === 0 ?
+                        <Content contentContainerStyle={{ padding: 15 }}>
+                            <Text style={{ textAlign: "center" }}>ยังไม่มีข้อมูล</Text>
+                        </Content>
+                        :
+                        <Timeline
+                            style={{ padding: 15 }}
+                            lineColor='rgb(45,156,219)'
+                            timeStyle={{ color: 'red', }}
+                            descriptionStyle={{ color: 'gray' }}
+                            data={dataTimeline}
+                        />)
                 }
-                {this.state.selected === 2 ?
-                    <Content style={{ padding: 20 }}>
+                {this.state.selected === 2 &&
+                    <Content contentContainerStyle={{ padding: 15 }} >
                         <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
                             <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
                             <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ผู้เพิ่มข้อมูล</Text>
@@ -237,7 +258,7 @@ export class PersonHistoryScreen extends Component {
                                 </View>
                                 <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>{element.Informer_name}</Text>
                                 <View style={{ margin: 10, width: '20%', textAlign: 'center', flexDirection: 'row' }}>
-                                    <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
+                                    <TouchableOpacity onPress={this.edit.bind(this, element)}>
                                         <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
@@ -249,10 +270,10 @@ export class PersonHistoryScreen extends Component {
 
                         )}
                         <View style={{ height: 20 }}></View>
-                    </Content> : <View></View>
+                    </Content>
                 }
-                {this.state.selected === 3 ?
-                    <Content style={{ padding: 20 }}>
+                {this.state.selected === 3 &&
+                    <Content contentContainerStyle={{ padding: 15 }}>
                         <Item fixedLabel >
                             <Label>ชื่อเหตุการณ์ :</Label>
                             <Input value={Name_activity}
@@ -265,7 +286,9 @@ export class PersonHistoryScreen extends Component {
                         </Item>
                         <Item fixedLabel >
                             <Label>ปีที่เริ่ม :</Label>
-                            <Input value={Year_start} maxLength={4} onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
+                            <Input value={Year_start} maxLength={4}
+                                keyboardType={"number-pad"}
+                                onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
                         </Item>
 
                         <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
@@ -276,20 +299,24 @@ export class PersonHistoryScreen extends Component {
                                 <Icon name='left' type="AntDesign" />
                                 <Text>กลับ</Text></Button>
                         </View>
+
                     </Content>
 
-                    : <View></View>
                 }
+
                 <Footer>
                     <FooterTab style={styles.footer}>
                         <TouchableOpacity onPress={() => this.setState({ selected: 1 })}>
-                            <Text style={{ textAlign: 'center', marginLeft: 30 }}>Timeline</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 1 && { backgroundColor: themeStyle.Color_green }]}>Timeline</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => this.setState({ selected: 2 })}>
-                            <Text style={{ textAlign: 'center' }}>ตารางข้อมูล</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 2 && { backgroundColor: themeStyle.Color_green }]}>ตารางข้อมูล</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
-                            <Text style={{ textAlign: 'center', marginRight: 30 }}>เพิ่มข้อมูล</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 3 && { backgroundColor: themeStyle.Color_green }]}>เพิ่มข้อมูล</Text>
                         </TouchableOpacity>
                     </FooterTab>
                 </Footer>

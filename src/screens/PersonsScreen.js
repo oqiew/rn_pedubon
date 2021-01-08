@@ -1,20 +1,24 @@
 import React, { Component } from 'react'
-import { Text, View, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, TouchableOpacity, Image } from 'react-native';
 import styles from '../styles/main.styles';
 import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form } from 'native-base';
+import { Container, Content, Item, Label, Input, Icon, Button, Text } from 'native-base';
 import { isEmptyValue } from '../components/Methods';
 import Firebase from '../Firebase';
 import firestore from '@react-native-firebase/firestore';
-
+import themeStyle from '../styles/theme.style';
+import { routeName } from '../routes/RouteConstant';
+import { TableName } from '../Database/constan';
+import Loading from '../components/Loading';
+import PDHeader from '../components/header';
 export class PersonsScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbUserHome = firestore().collection('SOCIAL_MAPS');
+        this.tbSocialMaps = firestore().collection(TableName.Social_maps);
         //getl);
         this.state = {
-
+            loading: false,
             //data
             HName: '', HLastname: '', Haddress: '',
             HAge: '', HCareer: '',
@@ -36,69 +40,28 @@ export class PersonsScreen extends Component {
         this.authListener();
     }
     authListener() {
-        if (isEmptyValue(this.state.User_ID)) {
+        if (isEmptyValue(this.state.uid)) {
             this.props.navigation.navigate('Home');
         } else {
-            const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
-            this.unsubscribe = this.tbUserHome
-                .where('Area_PID', '==', Area_PID).where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID)
-                .where('Area_ID', '==', Area_ID).where('Geo_map_type', '==', 'home')
+            const { Area_ID } = this.state;
+            this.unsubscribe = this.tbSocialMaps
+                .where('Area_ID', '==', Area_ID)
+                .where('Geo_map_type', '==', 'home')
+                .where('Important', '==', true)
                 .onSnapshot(this.onCollectionUpdate);
         }
     }
-    delete(id) {
-        this.tbUserHome.doc(id).get().then((doc) => {
-            if (doc.exists) {
-                var desertRef = Firebase.storage().refFromURL(doc.data().Map_iamge_URL);
-                desertRef.delete().then(function () {
-                    this.tbUserHome.doc(id).delete().then(() => {
-                        console.log("delete user and image sucess");
 
-                    }).catch((error) => {
-                        console.error("Error removing document: ", error);
-                    });
-                }).catch(function (error) {
-                    console.log("image No such document! ");
-                });
-                firestore().collection('PERSON_HISTORYS').where('Person_ID', '==', id).onSnapshot((querySnapshot) => {
-                    querySnapshot.forEach((doc) => {
-                        firestore().collection('PERSON_HISTORYS').doc(doc.id).delete().then(() => {
-                            console.log("delete child sucess");
-                        }).catch((error) => {
-                            console.error("Error removing child document: ", error);
-                        });
-                    })
-                })
-            } else {
-                console.log("user No such document! " + id);
-            }
+    edit(data) {
 
-        });
+        const { HName, HLastname, HAddress,
+            HAge, HCareer, Geo_map_description, } = data;
 
 
-    }
-    edit(id) {
-        this.tbUserHome.doc(id).get().then((doc) => {
-            const { HName, HLastname, HAddress,
-                HAge, HCareer, Geo_map_description, } = doc.data();
-            if (HName === '' || HLastname === '' || HAddress === '' ||
-                HAge === '' || HCareer === '' || HName === undefined || HLastname === undefined || HAddress === undefined ||
-                HAge === undefined || HCareer === undefined) {
-                this.setState({
-                    Geo_map_description, edit_ID: id, selected: 2
-                })
-            } else {
-                console.log('edit')
-                this.setState({
-                    HName, HLastname, HAddress,
-                    HAge, HCareer, Geo_map_description, edit_ID: id, selected: 2
-                })
-            }
-
-
-        }).catch((error) => {
-            console.error("Error document: ", error);
-        });
+        this.setState({
+            HName, HLastname, HAddress,
+            HAge, HCareer, Geo_map_description, edit_ID: data.Key, selected: 2
+        })
     }
     cancelEdit = (e) => {
         this.setState({
@@ -109,15 +72,17 @@ export class PersonsScreen extends Component {
     }
     onCollectionUpdate = (querySnapshot) => {
         const listLifeStorys = [];
-
+        this.setState({
+            loading: true
+        })
         querySnapshot.forEach((doc) => {
             const { Informer_name, HAddress, HAge, HCareer,
-                Map_iamge_URL, Geo_map_name, Geo_map_description, HName, HLastname } = doc.data();
+                Map_image_URL, Geo_map_name, Geo_map_description, HName, HLastname } = doc.data();
 
             // var temp = parseInt();
             listLifeStorys.push({
                 Key: doc.id,
-                Map_iamge_URL,
+                Map_image_URL,
                 HName,
                 HLastname,
                 HAddress,
@@ -130,7 +95,8 @@ export class PersonsScreen extends Component {
         });
 
         this.setState({
-            listLifeStorys
+            listLifeStorys,
+            loading: false
         });
     }
 
@@ -138,23 +104,25 @@ export class PersonsScreen extends Component {
         const state = this.state
         state[e.target.name] = e.target.value;
         this.setState(state);
-
-
-
     }
     goToEdit = (eid, eName) => {
-        this.props.navigation.navigate('PersonHistory', { id: eid, name: eName });
-
+        this.props.navigation.navigate(routeName.PersonHistory, { id: eid, name: eName });
     }
     onSubmit = (e) => {
         e.preventDefault();
+        this.setState({
+            loading: true
+        })
         const { HName, HLastname, HAddress, HAge,
-            HCareer, Geo_map_description, Area_ID, edit_ID, Name, User_ID } = this.state;
+            HCareer, Geo_map_description, Area_ID, edit_ID, Name, uid } = this.state;
         if (HName === '' || HLastname === '' || HAddress === '' || HAge === '' ||
             HCareer === '' || Geo_map_description === '') {
             alert('กรุณากรอกข้อมูลให้ครบ');
+            this.setState({
+                loading: false
+            })
         } else {
-            this.tbUserHome.doc(edit_ID).update({
+            this.tbSocialMaps.doc(edit_ID).update({
                 Informer_name: Name,
                 Geo_ban_ID: Area_ID,
                 HName,
@@ -163,7 +131,8 @@ export class PersonsScreen extends Component {
                 HAge,
                 HCareer,
                 Geo_map_description,
-                Informer_ID: User_ID
+                Informer_ID: uid,
+                Update_date: firestore.Timestamp.now(),
 
             }).then((result) => {
                 this.setState({
@@ -174,100 +143,124 @@ export class PersonsScreen extends Component {
                     HCareer: '',
                     Geo_map_description: '',
                     edit_ID: '',
-                    selected: 1
+                    selected: 1,
+                    loading: false
                 })
             }).catch((error) => {
                 alert('บันทึกข้อมูลสำเร็จ');
+                this.setState({
+                    loading: false
+                })
             });
         }
 
+    }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Main)
     }
     render() {
         const { HName, HLastname, HAddress,
             HAge, HCareer, Geo_map_description, Ban_name } = this.state;
         return (
-            <Container>
-                <Text style={styles.title}>บ้าน {this.state.Ban_name}หมู่ที่{this.state.Area_ID + 1}</Text>
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name={'บุคคลที่น่าสนใจ'} backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                <Content contentContainerStyle={{ padding: 15 }}>
 
-                {this.state.selected === 1 ?
-                    <Content style={{ padding: 20 }}>
-                        <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
-                            <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
-                            <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ผู้เพิ่มข้อมูล</Text>
-                            <Text style={{ fontWeight: 'bold', margin: 10, width: '20%', textAlign: 'center' }}>แก้ไข</Text>
-                        </View>
-                        {this.state.listLifeStorys.map((element, i) =>
-
-                            <View Key={i} style={{ flexDirection: 'row', }}>
-                                <View style={{ flexDirection: 'column', margin: 10, width: '35%' }}>
-                                    <Image source={{ uri: element.Map_iamge_URL }} style={{ width: 50, height: 50 }}></Image>
-                                    <Text>{element.HName} {element.HLastname} </Text>
-                                </View>
-                                <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>{element.Informer_name}</Text>
-                                <View style={{ margin: 10, width: '20%', textAlign: 'center', flexDirection: 'row' }}>
-                                    {element.HName !== undefined ?
-                                        <TouchableOpacity onPress={this.goToEdit.bind(this, element.Key, element.HName)}>
-                                            <Image source={require('../assets/zoom.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                    {this.state.selected === 1 &&
+                        <>
+                            <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
+                                <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
+                                <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ผู้เพิ่มข้อมูล</Text>
+                                <Text style={{ fontWeight: 'bold', margin: 10, width: '20%', textAlign: 'center' }}>แก้ไข</Text>
+                            </View>
+                            {this.state.listLifeStorys.map((element, i) =>
+                                <View Key={i} style={{ flexDirection: 'row', }}>
+                                    <View style={{ flexDirection: 'column', margin: 10, width: '35%' }}>
+                                        <Image source={{ uri: element.Map_image_URL }} style={{ width: 50, height: 50 }}></Image>
+                                        <Text>{element.HName} {element.HLastname} </Text>
+                                    </View>
+                                    <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>{element.Informer_name}</Text>
+                                    <View style={{ width: '20%', justifyContent: 'center', flexDirection: 'column' }}>
+                                        {!isEmptyValue(element.HName) &&
+                                            <TouchableOpacity onPress={this.goToEdit.bind(this, element.Key, element.HName)}
+                                                style={{ flexDirection: 'row', margin: 5 }}>
+                                                <Image source={require('../assets/zoom.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                                <Text>ประวัติ</Text>
+                                            </TouchableOpacity>
+                                        }
+                                        <TouchableOpacity onPress={this.edit.bind(this, element)} style={{ flexDirection: 'row', margin: 5 }}>
+                                            <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
+                                            <Text>แก้ไข</Text>
                                         </TouchableOpacity>
-                                        : <View></View>}
-                                    <TouchableOpacity onPress={this.edit.bind(this, element.Key)} >
-                                        <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
-                                        <Image source={require('../assets/trash_can.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
-                                    </TouchableOpacity>
+                                    </View>
+                                </View>
+                            )}
+                            <View style={{ height: 20 }}></View>
+                        </>
+                    }
+                    {this.state.selected === 2 &&
+                        <>
+
+                            <Text style={{ fontSize: 20, fontWeight: 'bold' }}>เพิ่มข้อมูล</Text>
+                            <View style={{ flex: 1, alignItems: 'center', marginBottom: 20 }}>
+                                <Item fixedLabel >
+                                    <Label>ชื่อจริง<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input value={HName}
+                                        placeholder="ชื่อจริง"
+                                        onChangeText={str => this.setState({ HName: str })} />
+                                </Item>
+                                <Item fixedLabel >
+                                    <Label>นามสกุล<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input rowSpan={4} value={HLastname}
+                                        placeholder="ชื่อจริง"
+                                        onChangeText={str => this.setState({ HLastname: str })} />
+                                </Item>
+                                <Item fixedLabel >
+                                    <Label>ที่อยู่<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input rowSpan={4} value={HAddress}
+
+                                        onChangeText={str => this.setState({ HAddress: str })} placeholder="บ้านเลขที่ หมู่บ้าน" />
+                                </Item>
+                                <Item fixedLabel >
+                                    <Label>อายุ<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input value={HAge} keyboardType='numeric'
+                                        placeholder="อายุ"
+                                        onChangeText={str => this.setState({ HAge: str })} />
+                                </Item>
+                                <Item fixedLabel >
+                                    <Label>อาชีพ<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input value={HCareer}
+                                        placeholder="อาชีพ"
+                                        onChangeText={str => this.setState({ HCareer: str })} />
+                                </Item>
+                                <Item fixedLabel >
+                                    <Label>บทบาท<Text style={{ color: 'red' }}>*</Text> :</Label>
+                                    <Input value={Geo_map_description}
+                                        onChangeText={str => this.setState({ Geo_map_description: str })} placeholder="บทบาท ความสัมพันธ์ ในชุมชน" />
+                                </Item>
+                                <View style={{ flexDirection: 'row' }}>
+                                    <Button
+                                        success
+                                        style={{ margin: 10 }}
+                                        onPress={this.onSubmit.bind(this)}>
+                                        <Icon name="save" type="AntDesign" />
+                                        <Text>บันทึก</Text>
+                                    </Button>
+                                    <Button
+                                        danger
+                                        style={{ marginTop: 10 }}
+                                        onPress={this.cancelEdit.bind(this)}>
+                                        <Icon name="left" type="AntDesign" />
+                                        <Text>กลับ</Text>
+                                    </Button>
                                 </View>
                             </View>
-                        )}
-                        <View style={{ height: 20 }}></View>
-                    </Content> : <View></View>
-                }
-                {this.state.selected === 2 ?
-                    <Content style={{ padding: 20 }}>
-                        <Text style={{ fontSize: 20, fontWeight: 'bold' }}>เพิ่มข้อมูล</Text>
-                        <Item fixedLabel >
-                            <Label>ชื่อ :</Label>
-                            <Input value={HName}
-                                onChangeText={str => this.setState({ HName: str })} />
-                        </Item>
-                        <Item fixedLabel >
-                            <Label>นามสกุล :</Label>
-                            <Input rowSpan={4} value={HLastname}
-                                onChangeText={str => this.setState({ HLastname: str })} />
-                        </Item>
-                        <Item fixedLabel >
-                            <Label>ที่อยู่ :</Label>
-                            <Input rowSpan={4} value={HAddress}
-                                onChangeText={str => this.setState({ HAddress: str })} placeholder="บ้านเลขที่ หมู่บ้าน" />
-                        </Item>
-                        <Item fixedLabel >
-                            <Label>อายุ :</Label>
-                            <Input value={HAge} keyboardType='numeric'
-                                onChangeText={str => this.setState({ HAge: str })} />
-                        </Item>
-                        <Item fixedLabel >
-                            <Label>อาชีพ :</Label>
-                            <Input value={HCareer}
-                                onChangeText={str => this.setState({ HCareer: str })} />
-                        </Item>
-                        <Item fixedLabel >
-                            <Label>บทบาท:</Label>
-                            <Input value={Geo_map_description}
-                                onChangeText={str => this.setState({ Geo_map_description: str })} placeholder="บทบาท ความสัมพันธ์ ในชุมชน" />
-                        </Item>
-                        <View style={{ flex: 1, alignItems: 'center', marginBottom: 50 }}>
-                            <TouchableOpacity style={styles.btn_info} onPress={this.onSubmit.bind(this)}>
-                                <Text style={styles.btnTxt}>บันทึก</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={styles.btn_danger} onPress={this.cancelEdit.bind(this)}>
-                                <Text style={styles.btnTxt}>ยกเลิก</Text>
-                            </TouchableOpacity>
-                        </View>
-                    </Content>
+                        </>
 
-                    : <View></View>
-                }
-            </Container>
+                    }
+                </Content>
+            </Container >
         )
     }
 }

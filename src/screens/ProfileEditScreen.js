@@ -1,326 +1,58 @@
-import React, { Component } from 'react';
-import Firebase from '../Firebase';
-import styles from '../styles/main.styles';
-import ImagePicker from 'react-native-image-picker';
-import { Icon, Input, Label, Item, Picker, DatePicker, Text, Button, Container, Content, } from 'native-base';
-import RNFetchBlob from 'react-native-fetch-blob';
-import {
-    ScrollView,
-    View,
-    Image,
-    Alert
 
-} from 'react-native';
-import data_provinces from '../data/provinces';
-import { fetch_user } from '../actions';
+import React, { Component } from 'react'
+import { View, TouchableOpacity, StyleSheet, Image, Alert } from 'react-native'
+import { Icon, Input, Label, Item, Picker, Text, Button, Container, Content, } from 'native-base';
+import Storage from '@react-native-firebase/storage'
 import { connect } from 'react-redux';
-import { GetCurrentDate, isEmptyValue } from '../components/Methods';
+import { fetch_user } from '../actions';
+import PDHeader from '../components/header';
 import Loading from '../components/Loading';
+import { TableName } from '../Database/constan';
+import { routeName } from '../routes/RouteConstant';
+import themeStyle from '../styles/theme.style';
 import firestore from '@react-native-firebase/firestore';
-class ProfileEditScreen extends Component {
+import ImagePicker from 'react-native-image-picker'
+import ImageResizer from 'react-native-image-resizer'
+import { isEmptyValue, isEmptyValues } from '../components/Methods';
+import DatePicker from 'react-native-datepicker'
+
+const style_private = StyleSheet.create({
+    image: {
+        borderRadius: 10, width: 200, height: 200, marginHorizontal: 5, marginVertical: 5,
+        borderWidth: 2, borderColor: themeStyle.Color_content,
+    }
+})
+
+export class ProfileEditScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbUsers = firestore().collection('USERS');
-        console.log(this.props.fetchReducer.user)
-        if (isEmptyValue(this.props.fetchReducer.user.Name)) {
-            this.state = {
-                ...this.props.fetchReducer.user,
-                Name: '', Last_name: '', Nickname: '', Sex: '', Phone_number: '',
-                Line_ID: '', Facebook: '', Birthday: '', Position: '', Department: '',
-                Province_ID: '', District_ID: '', Sub_district_ID: '', Avatar_URL: '',
-                Area_ID: '', Role: '', Area_PID: '', Area_DID: '', Area_SDID: '',
-                Province: '', District: '', Sub_district: '', User_type: '', bd: '', Ban_name: '',
-                //List Data
-                Provinces: [],
-                Districts: [],
-                Sub_districts: [],
-
-                //temp date
-                day: '',
-                month: '',
-                year: '',
-
-                new_user: false,
-
-                loading: false,
-                showBirthday: false,
-
-                isUploaded: '0'
-            }
-
-        } else {
-            this.state = {
-                ...this.props.fetchReducer.user,
-                //List Data
-                Provinces: [],
-                Districts: [],
-                Sub_districts: [],
-
-                //temp date
-                day: '',
-                month: '',
-                year: '',
-
-                new_user: false,
-
-                loading: false,
-                showBirthday: false,
-
-                isUploaded: '0'
-            }
-        }
-
+        this.tbUser = firestore().collection(TableName.Users);
+        this.state = {
+            ...this.props.fetchReducer.user,
+            loading: false,
+            newAvatarUpload: false,
+            avatar_uri: ''
+        }; console.log(this.state)
     }
-    authListener() {
-        if (!isEmptyValue(this.state.User_ID)) {
-            if (!isEmptyValue(this.state.Name)) {
-                const { Province_ID, District_ID, Sub_district_ID, Birthday } = this.state;
-                var d1 = new Date(Birthday.seconds * 1000);
-                var day = d1.getDate();
-                var month = (parseInt(d1.getMonth(), 10) + 1);
-                var year = d1.getFullYear();
-                this.setState({
-                    day, month, year,
-                    Province_ID: parseInt(Province_ID, 10),
-                    District_ID: parseInt(District_ID, 10),
-                    Sub_district_ID: parseInt(Sub_district_ID, 10),
-                })
-                this.listProvinces();
-                this.listDistrict(Province_ID);
-                this.listSub_district(Province_ID, District_ID);
-            } else {
-                console.log("no profile")
-                this.listProvinces();
-                this.setState({
-                    new_user: true
-                })
-            }
-        }
-    }
-    selectDate = date => {
-        this.setState({
-            Birthday: date,
-        });
-    };
-    componentDidMount() {
-        this.authListener();
-    }
-    listProvinces = () => {
-        const Provinces = [];
-        data_provinces.forEach((doc, i) => {
-
-            Provinces.push({
-                Key: i,
-                value: doc[0]
-            })
-        })
-        this.setState({
-            Provinces
-        })
-    }
-    listDistrict = (pid) => {
-        const Districts = [];
-        data_provinces[pid][1].forEach((doc, i) => {
-            Districts.push({
-                Key: i,
-                value: doc[0]
-            })
-        })
-        if (this.state.Name !== '') {
-            this.setState({
-                Districts,
-
-            })
-        } else {
-            this.setState({
-                Districts,
-                District_ID: '',
-                Sub_district_ID: '',
-            })
-        }
-
-    }
-    listSub_district = (pid, did) => {
-        const Sub_districts = [];
-
-        data_provinces[pid][1][did][2][0].forEach((doc, i) => {
-
-            Sub_districts.push({
-                Key: i,
-                value: doc[0]
-            })
-        })
-        if (this.state.Name !== '') {
-            this.setState({
-                Sub_districts,
-
-            })
-        } else {
-            this.setState({
-                Sub_districts,
-                Sub_district_ID: '',
-            })
-        }
-    }
-
-
-    onSelectProvince = (value, index) => {
-
-
-        if (value === '') {
-
-            this.setState({
-                Districts: [],
-                District_ID: '',
-                Sub_districts: [],
-                Sub_district_ID: '',
-            })
-        } else {
-            this.setState({
-                Province_ID: value
-            })
-            this.listDistrict(value);
-        }
-
-    }
-    onSelectDistrict = (value, index) => {
-
-        if (value === '') {
-            this.setState({
-                Sub_districts: [],
-                Sub_district_ID: '',
-            })
-        } else {
-            this.setState({
-                District_ID: value
-            })
-            this.listSub_district(this.state.Province_ID, value);
-        }
-    }
-    onSubmit = (e) => {
-        e.preventDefault();
-        this.setState({
-            loading: true
-        })
-
-        const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position, Department,
-            Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-            Area_ID, Role, Area_PID, Area_DID, Area_SDID, User_ID,
-            Province, District, Sub_district, User_type, bd,
-        } = this.state;
-        let Ban_name = '';
-        if (!isEmptyValue(this.state.Ban_name)) {
-            Ban_name = this.state.Ban_name
-        }
-        if (isEmptyValue(Avatar_URL)) {
-            this.setState({
-                loading: false
-            })
-            Alert.alert("กรุณาอัพโหลดรูปภาพของคุณ")
-        } else {
-            if (Name === '' || Last_name === '' || Nickname === '' || Sex === '' || Phone_number === '' ||
-                Birthday === '' || Position === '' || Department === '' ||
-                Province_ID === '' || District_ID === '' || Sub_district_ID === '' || Email === '') {
-                Alert.alert("กรุณากรอกข้อมูลให้ครบ");
-                this.setState({
-                    loading: false
-                })
-            } else {
-
-                if (this.state.new_user) {
-                    //add data user 
-                    this.tbUsers.doc(User_ID).set({
-                        Name, Last_name, Nickname, Sex, Phone_number,
-                        Line_ID, Facebook, Birthday, Position, Department,
-                        Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                        Add_date: GetCurrentDate("/"), Area_ID, Role, Area_PID, Area_DID, Area_SDID,
-                        User_type
-
-                    }).then((docRef) => {
-                        this.setState({
-                            loading: false
-                            , showBirthday: false
-                        })
-                        const Province = data_provinces[Province_ID][0];
-                        const District = data_provinces[Province_ID][1][District_ID][0];
-                        if (!isEmptyValue(Area_ID)) {
-                            Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
-                        }
-                        const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-                        var d1 = new Date(Birthday.seconds * 1000);
-                        let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-                        this.props.fetch_user({
-                            User_ID,
-                            Name, Last_name, Nickname, Sex, Phone_number,
-                            Line_ID, Facebook, Birthday, Position, Department,
-                            Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL,
-                            Area_ID, Role, Area_PID, Area_DID, Area_SDID,
-                            Province, District, Sub_district, User_type, bd, Ban_name
-                        });
-                        this.props.navigation.navigate('Main')
-                        Alert.alert('บันทึกสำเร็จ');
+    uploadImage() {
+        console.log("upload image")
+        try {
+            return new Promise((resolve, reject) => {
+                const imageRef = Storage().ref('User').child('user' + this.state.uid + '.jpg')
+                let mime = 'image/jpg';
+                imageRef.putFile(this.state.avatar_uri, { contentType: mime })
+                    .then(() => { return imageRef.getDownloadURL() })
+                    .then((url) => {
+                        resolve(url)
                     })
-                        .catch((error) => {
-                            this.setState({
-                                loading: false
-                            })
-                            Alert.alert('บันทึกไม่สำเร็จ');
-                            console.error("Error adding document: ", error);
-                        });
-
-                } else {
-                    //update
-                    this.tbUsers.doc(User_ID).update({
-                        Name, Last_name, Nickname, Sex, Phone_number,
-                        Line_ID, Facebook, Birthday: new Date(Birthday.seconds * 1000), Position, Department,
-                        Province_ID, District_ID, Sub_district_ID, Email, Avatar_URL, Area_PID, Area_DID, Area_SDID,
-                        Add_date: GetCurrentDate("/"), Area_ID, Role,
-                        User_type
-                    }).then((docRef) => {
-
-                        this.setState({
-                            loading: false
-                            , showBirthday: false
-                        })
-                        const Province = data_provinces[Province_ID][0];
-                        const District = data_provinces[Province_ID][1][District_ID][0];
-                        if (!isEmptyValue(Area_ID)) {
-                            Ban_name = data_provinces[Area_PID][1][Area_DID][2][0][Area_SDID][1][0][Area_ID][1];
-                        }
-                        const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-                        var d1 = new Date(Birthday.seconds * 1000);
-                        let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();
-
-                        this.props.fetch_user({
-                            User_ID,
-                            Name, Last_name, Nickname, Sex, Phone_number,
-                            Line_ID, Facebook, Birthday, Position, Department,
-                            Province_ID, District_ID, Sub_district_ID,
-                            Email, Avatar_URL,
-                            Area_ID, Role, Area_PID, Area_DID, Area_SDID,
-                            Province, District, Sub_district,
-                            User_type, bd, Ban_name
-
-                        });
-                        Alert.alert("อัพเดตสำเร็จ");
-                    })
-                        .catch((error) => {
-                            this.setState({
-                                loading: false
-                            })
-                            Alert.alert('อัพเดตไม่สำเร็จ');
-                            console.error("Error update document: ", error);
-                        });
-
-                }
-
-            }
+                    .catch((error) => { reject(error) })
+            })
+        } catch (error) {
+            console.log("upload image", error)
         }
-
-
     }
-    handleChoosePhoto = () => {
+
+    _handleChoosePhoto = () => {
         const options = {
             title: 'เลือกรูปโปรไฟล์',
             takePhotoButtonTitle: 'ถ่ายรูป',
@@ -330,9 +62,8 @@ class ProfileEditScreen extends Component {
                 skipBackup: true,
                 path: 'images',
             },
-        };
-        ImagePicker.showImagePicker(options, (response) => {
-
+        }
+        ImagePicker.showImagePicker(options, response => {
             if (response.didCancel) {
                 console.log('User cancelled image picker');
             } else if (response.error) {
@@ -340,259 +71,203 @@ class ProfileEditScreen extends Component {
             } else if (response.customButton) {
                 console.log('User tapped custom button: ', response.customButton);
             } else {
-                const source = { uri: response.uri }
-
-                // You can also display the image using data:
-                //const source = { uri: 'data:image/jpeg;base64,' + response.data };
-
-                this.setState({
-                    imgSource: source,
-                    imageUri: response.uri,
-                    isUploaded: '2',
-
-                });
-
-                this.uploadImage(this.state.User_ID);
+                ImageResizer.createResizedImage(Platform.OS === "android" ? response.path : response.uri, 300, 300, 'JPEG', 100)
+                    .then(({ uri }) => {
+                        this.setState({
+                            newAvatarUpload: true,
+                            avatar_uri: uri
+                        })
+                    })
+                    .catch(error => {
+                        console.log(error);
+                    });
             }
-        });
-
-
+        })
     }
-
-    uploadImage = async (filename) => {
-        console.log('start upload :' + filename)
-        var image = Platform.OS === 'ios' ? this.state.imageUri.replace('file://', '') : this.state.imageUri;
-        const Blob = RNFetchBlob.polyfill.Blob;
-        window.Blob = Blob;
-        const tempWindowXMLHttpRequest = window.XMLHttpRequest;
-        window.XMLHttpRequest = RNFetchBlob.polyfill.XMLHttpRequest;
-
-
-        let uploadBlob = null
-        const imageRef = Firebase.storage().ref('Avatar').child('user' + filename);
-        let mime = 'image/jpg';
-        RNFetchBlob.fs.readFile(image, 'base64')
-            .then((data) => {
-
-
-                return Blob.build(data, { type: `${mime};BASE64` });
-            })
-            .then((blob) => {
-
-                uploadBlob = blob;
-                return imageRef.put(blob, { contentType: mime });
-            })
-            .then(() => {
-
-                uploadBlob.close();
-                return imageRef.getDownloadURL();
-            })
-            .then((url) => {
-                // URL of the image uploaded on Firebase storage
-                console.log(url);
-                window.XMLHttpRequest = tempWindowXMLHttpRequest;
-                this.setState({ Avatar_URL: url, isUploaded: '3' });
-
-            })
-            .catch((error) => {
-                console.log("error image", error);
-
-            })
-    }
-
-    selectDate = date => {
-        var day = date.getDate();
-        var month = (parseInt(date.getMonth(), 10) + 1);
-        var year = date.getFullYear();
+    _onSave = async () => {
         this.setState({
-            Birthday: date,
-            day,
-            month,
-            year,
-            showBirthday: true
-        });
-    };
-
-    render() {
-        //step create Email
-
-        const { Email, } = this.state;
-        //User Profile
-        const { Name, Last_name, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position, Department,
-            Province_ID, District_ID, Sub_district_ID,
-            Role, Avatar_URL
-        } = this.state;
-        //List data
-        const { Provinces, Districts, Sub_districts, User_types } = this.state;
-        if (this.state.loading) {
-            return (<Loading></Loading>)
+            loading: true
+        })
+        const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
+            Line_ID, Facebook, Birthday, Position, Area_ID, newAvatarUpload, Avatar_URL } = this.state;
+        var temp_Avatar_URL = "";
+        if (newAvatarUpload) {
+            temp_Avatar_URL = await this.uploadImage();
         } else {
-            return (
-                <Container>
-                    <Content style={{ backgroundColor: "#e4e4e4" }}>
-
-                        <View style={styles.container}>
-                            {(isEmptyValue(Avatar_URL) ?
-                                <Image source={require('../assets/user.png')} style={styles.avatar}></Image>
-                                : <Image source={{ uri: Avatar_URL }} style={styles.avatar}></Image>)}
-                            {this.state.isUploaded === '2' && <Text>กำลังอัพโหลดรูปภาพ</Text>}
-                            <View>
-                                <Button style={{ margin: 10 }} onPress={this.handleChoosePhoto.bind(this)}>
-                                    <Icon name='plus' type="AntDesign" />
-                                    <Text>เลือกรูป</Text>
-                                </Button>
-                            </View>
-
-
-
-                            <Item fixedLabel >
-                                <Label>ชื่อ :</Label>
-                                <Input value={Name} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Name: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>นามสกุล :</Label>
-                                <Input value={Last_name} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Last_name: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ชื่อเล่น :</Label>
-                                <Input value={Nickname} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Nickname: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>เพศ :</Label>
-                                <Picker
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    selectedValue={Sex}
-                                    onValueChange={str => this.setState({ Sex: str })}>
-                                    <Picker.Item label="เลือกเพศ" value="" />
-                                    <Picker.Item label="ชาย" value="ชาย" />
-                                    <Picker.Item label="หญิง" value="หญิง" />
-                                    <Picker.Item label="อื่นๆ" value="อื่นๆ" />
-                                </Picker>
-                            </Item>
-
-                            <Item>
-                                {/* {console.log('true', this.state.showBirthday)} */}
-                                {this.state.showBirthday ? <Text></Text> :
-                                    this.state.day !== '' ?
-                                        <Text style={{ fontSize: 16 }}>
-                                            {this.state.day + "/" + this.state.month + "/" + this.state.year}
-                                        </Text> : <Text></Text>
-                                }
-                                <DatePicker
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    maximumDate={new Date()}
-                                    placeHolderText="วันเกิด"
-                                    dateFormat="dd/MM/yyyy"
-                                    onDateChange={this.selectDate}
-                                    placeholderText="วัน/เดือน/ปี(ค.ศ.)"
-                                    animationType="fade"
-                                />
-
-                            </Item>
-
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>เบอร์มือถือ :</Label>
-                                <Input value={Phone_number} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Phone_number: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>Facebook :</Label>
-                                <Input value={Facebook} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Facebook: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>Line_ID :</Label>
-                                <Input value={Line_ID} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Line_ID: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ประเภทผู้ใช้ :</Label>
-                                <Picker
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    selectedValue={this.state.User_type}
-                                    onValueChange={(itemValue, itemIndex) =>
-                                        this.setState({ User_type: itemValue })}>
-                                    <Picker.Item key="0" label="เลือกประเภทผู้ใช้" value="" />
-                                    <Picker.Item key="1" label="ผู้บริหาร" value="ผู้บริหาร" />
-                                    <Picker.Item key="2" label="พี่เลี้ยง" value="พี่เลี้ยง" />
-                                    <Picker.Item key="3" label="แกนนำเด็ก" value="แกนนำเด็ก" />
-
-
-                                </Picker>
-                            </Item>
-
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ตำแหน่ง :</Label>
-                                <Input value={Position} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Position: str })} />
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>หน่วยงาน :</Label>
-                                <Input value={Department} style={{ backgroundColor: "#ffffff", borderRadius: 5 }} onChangeText={str => this.setState({ Department: str })} />
-                            </Item>
-
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>จังหวัด :</Label>
-                                <Picker
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    selectedValue={Province_ID}
-                                    onValueChange={this.onSelectProvince.bind(this)}>
-                                    <Picker.Item key="0" label="เลือกจังหวัด" value="" />
-                                    {Provinces.map((data, i) =>
-                                        < Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                                    )}
-
-                                </Picker>
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>อำเภอ :</Label>
-                                <Picker
-
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    selectedValue={District_ID}
-                                    onValueChange={this.onSelectDistrict.bind(this)}>
-                                    <Picker.Item key="0" label="เลือกอำเภอ" value="" />
-                                    {Districts.map((data, i) =>
-                                        <Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                                    )}
-                                </Picker>
-                            </Item>
-                            <Item fixedLabel style={{ marginTop: 20 }}>
-                                <Label>ตำบล :</Label>
-                                <Picker
-                                    style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
-                                    selectedValue={Sub_district_ID}
-                                    onValueChange={(itemValue, itemIndex) =>
-                                        this.setState({ Sub_district_ID: itemValue })
-                                    }>
-                                    <Picker.Item key="0" label="เลือกตำบล" value="" />
-                                    {Sub_districts.map((data, i) =>
-                                        <Picker.Item key={i + 1} label={data.value} value={data.Key} />
-                                    )}
-                                </Picker>
-                            </Item>
-
-
-
-
-
-                            <View style={{ flexDirection: 'column' }}>
-                                <View style={{ flexDirection: 'row' }}>
-                                    <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
-                                        <Icon name='save' type="AntDesign" />
-                                        <Text>บันทึก</Text></Button>
-                                    <Button danger style={{ margin: 10 }} onPress={() => this.props.navigation.goBack()}>
-                                        <Icon name='left' type="AntDesign" />
-                                        <Text>กลับ</Text></Button>
-                                </View>
-                            </View>
-                        </View>
-
-
-                    </Content>
-                </Container>
-            )
+            temp_Avatar_URL = Avatar_URL
         }
+
+        if (isEmptyValue(temp_Avatar_URL)) {
+            Alert.alert("อัพโหลดรูปภาพไม่สำเร็จ กรุณาลองใหม่")
+            this.setState({
+                loading: false
+            })
+        } else {
+            console.log('update data')
+            try {
+                this.tbUser.doc(uid).update({
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type,
+                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
+                }).then((success) => {
+                    Alert.alert("บันทึกข้อมูลสำเร็จ")
+                    this.props.fetch_user({
+                        uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
+                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
+                    });
+                    this.setState({
+                        loading: false
+                    })
+                    this.props.navigation.navigate(routeName.Profile);
+
+                }).catch((error) => {
+                    console.log('error update', error)
+                    Alert.alert("บันทึกข้อมูลไม่สำเร็จ");
+                    this.setState({
+                        loading: false
+                    })
+                })
+            } catch (error) {
+                console.log('error update', error)
+            }
+        }
+
+
+    }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Profile)
+    }
+    render() {
+        const { avatar_uri, Avatar_URL } = this.state;
+        const { Name, Lastname, Nickname, Sex, Phone_number,
+            Line_ID, Facebook, Birthday, Position,
+        } = this.state;
+
+        return (
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name="แก้ไขโปรไฟล์" backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                <Content contentContainerStyle={{ padding: 15 }}>
+                    <View tyle={{ marginBottom: 10 }}>
+                        {isEmptyValue(avatar_uri) === false ?
+                            <TouchableOpacity onPress={this._handleChoosePhoto} style={{ marginBottom: 20, alignItems: 'center' }}>
+                                <Image style={[style_private.image]} source={{ uri: avatar_uri }} />
+                            </TouchableOpacity>
+                            :
+                            isEmptyValue(Avatar_URL) === false ?
+                                <TouchableOpacity onPress={this._handleChoosePhoto} style={{ marginBottom: 20, alignItems: 'center' }}>
+                                    <View style={[style_private.image, { backgroundColor: themeStyle.Color_white, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Image source={{ uri: Avatar_URL }} style={[style_private.image]}></Image>
+                                    </View>
+                                </TouchableOpacity>
+                                :
+                                <TouchableOpacity onPress={this._handleChoosePhoto} style={{ marginBottom: 20, alignItems: 'center' }}>
+                                    <View style={[style_private.image, { backgroundColor: themeStyle.Color_white, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <Icon name='plus' backgroundColor={themeStyle.Color_white} style={{ color: themeStyle.Color_content, fontSize: 60 }} type="AntDesign" />
+                                    </View>
+                                </TouchableOpacity>
+                        }
+                        <Text style={{ fontSize: 16, textAlign: "center", marginBottom: 5 }}>กดรูปเพื่ออัพโหลดรูปโปรไฟล์</Text>
+                    </View>
+                    <View style={{ marginBottom: 10 }}>
+                        <Item fixedLabel >
+                            <Label>ชื่อ<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                            <Input value={Name}
+                                placeholder="ชื่อจริงไม่ต้องใส่คำนำหน้า"
+                                onChangeText={str => this.setState({ Name: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>นามสกุล<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                            <Input value={Lastname}
+                                placeholder="นามสกุล"
+                                onChangeText={str => this.setState({ Lastname: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>ชื่อเล่น<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                            <Input value={Nickname}
+                                placeholder="ชื่อเล่น"
+                                onChangeText={str => this.setState({ Nickname: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>เพศ<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                            <Picker
+                                style={{ left: -56 }}
+                                selectedValue={Sex}
+                                onValueChange={str => this.setState({ Sex: str })}>
+                                <Picker.Item label="เลือกเพศ" value="" />
+                                <Picker.Item label="ชาย" value="ชาย" />
+                                <Picker.Item label="หญิง" value="หญิง" />
+                                <Picker.Item label="อื่นๆ" value="อื่นๆ" />
+                            </Picker>
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>วันเกิด<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
+                            <DatePicker
+                                style={{ width: 200 }}
+                                date={Birthday}
+                                mode="date"
+                                placeholder="เลือกวันเกิด(ค.ศ.)"
+                                format="DD-MM-YYYY"
+                                maxDate={new Date()}
+                                confirmBtnText="ตกลง"
+                                cancelBtnText="ยกเลิก"
+                                duration={300}
+                                customStyles={{
+                                    dateIcon: {
+                                        position: 'absolute',
+                                        right: 0,
+                                        top: 4,
+                                        marginRight: 0,
+                                    },
+                                    dateInput: {
+                                        marginRight: 36,
+                                    },
+                                    placeholderText: {
+                                        fontSize: 16,
+                                        color: '#5c5c5c',
+                                    },
+                                }}
+                                onDateChange={(date) => { this.setState({ Birthday: date }) }}
+                            />
+
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>เบอร์มือถือ :</Label>
+                            <Input value={Phone_number}
+                                placeholder="เบอร์มือถือ"
+                                keyboardType="number-pad"
+                                onChangeText={str => this.setState({ Phone_number: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>Facebook :</Label>
+                            <Input value={Facebook}
+                                placeholder="Facebook"
+                                onChangeText={str => this.setState({ Facebook: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>Line_ID :</Label>
+                            <Input value={Line_ID}
+                                placeholder="Line_ID"
+                                onChangeText={str => this.setState({ Line_ID: str })} />
+                        </Item>
+                        <Item fixedLabel style={{ marginTop: 5 }}>
+                            <Label>ตำแหน่ง :</Label>
+                            <Input value={Position}
+                                placeholder="ตำแหน่งในสภาเด็ก"
+                                onChangeText={str => this.setState({ Position: str })} />
+                        </Item>
+                    </View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'center' }}>
+                        <Button primary style={{ marginLeft: 10, marginRight: 10 }} onPress={this._onSave}>
+                            <Text style={{ fontSize: 26 }}>บันทึกข้อมูล</Text>
+                        </Button>
+                    </View>
+
+                </Content>
+            </Container>
+        )
     }
 }
-//Used to add reducer's into the props
+
 const mapStateToProps = state => ({
     fetchReducer: state.fetchReducer,
 });

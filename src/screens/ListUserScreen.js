@@ -1,170 +1,165 @@
 import React, { Component } from 'react';
 import { Text, View, ScrollView, TouchableOpacity, Image, BackHandler } from 'react-native';
 import { Container, Content, FooterTab, Footer, Icon, Header, Item, Input, } from 'native-base';
-import Firebase from '../Firebase';
 import styles from '../styles/main.styles';
-
 import data_provinces from '../data/provinces.json'
 import Loading from '../components/Loading';
 import firestore from '@react-native-firebase/firestore';
+import { routeName } from '../routes/RouteConstant';
+import { TableName } from '../Database/constan';
+import themeStyle from '../styles/theme.style';
+import PDHeader from '../components/header';
 export class ListUserScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbUsers = firestore().collection('USERS');
+        this.tbUsers = firestore().collection(TableName.Users);
         this.state = {
-            //get name form id
-            Province: '', District: '', Tumbon: '', User_type: '',
-
-            Provinces: [],
-            Districts: [],
-            Tumbons: [],
-            List_users: [],
+            users: [],
+            queryUsers: [],
 
             //ค้นหา
-            search_name: '',
-
+            searchName: '',
+            userType: 'ทั้งหมด',
             loading: false
-
-
         }
-        BackHandler.addEventListener('hardwareBackPress', () => {
-            this.props.back();
-            return true;
-        })
     }
     componentDidMount() {
         this.unsubscribe = this.tbUsers.onSnapshot(this.getUsers);
     }
-
     getUsers = (querySnapshot) => {
-
-        const List_users = [];
+        this.setState({
+            loading: true
+        })
+        const queryUsers = [];
         let count = 1;
         querySnapshot.forEach(doc => {
-            const { Name, Last_name, Nickname,
-                Position, Department, Province_ID,
-                District_ID, Sub_district_ID, Avatar_URL, User_type
+            const { Name, Lastname, Nickname,
+                Position, Avatar_URL, User_type
             } = doc.data();
 
-            const Province = data_provinces[Province_ID][0];
-            const District = data_provinces[Province_ID][1][District_ID][0];
-            const Sub_district = data_provinces[Province_ID][1][District_ID][2][0][Sub_district_ID][0];
-            // var d1 = new Date(Birthday.seconds * 1000);
-            // let bd = d1.getDate() + "/" + (parseInt(d1.getMonth(), 10) + 1) + "/" + d1.getFullYear();    
-            List_users.push({
+            queryUsers.push({
                 number: count++,
                 Avatar_URL,
-                Name: Name + " " + Last_name + "(" + Nickname + ")",
+                Name: Name + " " + Lastname + "(" + Nickname + ")",
                 User_type,
-                work: Position + ":" + Department,
-                District, Sub_district,
+                work: Position,
             });
 
         });
 
         this.setState({
-            List_users,
+            queryUsers,
+            users: queryUsers,
             loading: false
         })
     }
     clearSearch() {
-        this.setState({ search_name: '' });
-        this.unsubscribe = this.tbUsers.onSnapshot(this.getUsers);
+        this.setState({ searchName: '', userType: 'ทั้งหมด', users: this.state.queryUsers });
     }
-    searchuser() {
-        if (this.state.search_name !== '') {
-            this.unsubscribe = this.tbUsers
-                .where('Name', '==', this.state.search_name)
-                .onSnapshot(this.getUsers);
+    onSearchUser = (searchName) => {
+        const { userType } = this.state;
+        let queryUsers = this.state.queryUsers;
+        if (userType !== 'ทั้งหมด') {
+            queryUsers = this.state.users
         }
+        const regex = new RegExp(`${searchName.trim()}`, 'i');
+        const users = queryUsers.filter(searchName => searchName.Name.search(regex) >= 0)
+        console.log(users)
+        this.setState({
+            searchName,
+            users
+        })
     }
     seleteType(name) {
-        this.unsubscribe = this.tbUsers
-            .where('User_type', '==', name)
-            .onSnapshot(this.getUsers);
+        const { queryUsers } = this.state;
+        const regex = new RegExp(`${name.trim()}`, 'i');
+        const users = queryUsers.filter(name => name.User_type.search(regex) >= 0)
+        this.setState({
+            userType: name,
+            users
+        })
+    }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Main)
     }
     render() {
-        const { List_users, } = this.state;
-        if (this.state.loading) {
-            return (<Loading></Loading>)
-        } else {
-            return (
-                <Container>
-                    <Header searchBar rounded>
-                        <Item>
-                            <Icon name="ios-people" />
-                            <Input placeholder="ค้นหาชื่อ" value={this.state.search_name} onChangeText={str => this.setState({ search_name: str })} />
-                            <TouchableOpacity onPress={this.clearSearch.bind(this)}>
-                                <Icon name="close" />
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={this.searchuser.bind(this)}>
-                                <Icon name="ios-search" />
-                            </TouchableOpacity>
+        const { users, searchName } = this.state;
 
-                        </Item>
-                    </Header>
-                    <Content>
-                        <ScrollView>
-                            {List_users.map((element, i) =>
-                                <View key={i} style={{ padding: 10, marginLeft: 10, marginRight: 10, flexDirection: 'row' }}>
-                                    <Image source={{ uri: element.Avatar_URL }} style={{ width: 50, height: 50, borderRadius: 50, marginRight: 20 }} ></Image>
-                                    <Text style={{ fontSize: 16, width: 150, marginRight: 5 }}>{element.Name} {'\n'} {element.work}</Text>
-                                    <Text style={{ fontSize: 16 }}>{element.User_type}</Text>
-                                </View>
-                            )}
+        return (
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name={'ทำเนียบ'} backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                <Header searchBar rounded>
+                    <Item>
+                        <Icon name="ios-people" />
+                        <Input placeholder="ค้นหาชื่อ" value={searchName}
+                            onChangeText={str => this.onSearchUser(str)} />
+                        <TouchableOpacity onPress={this.clearSearch.bind(this)}>
+                            <Icon name="close" />
+                        </TouchableOpacity>
 
-                        </ScrollView>
-                    </Content>
-                    <Footer >
-                        <FooterTab style={styles.footer}>
-                            <TouchableOpacity onPress={this.clearSearch.bind(this)} style={{ alignItems: 'center', justifyContent: 'center', padding: 5, marginLeft: 10 }} >
-                                <Text style={{ color: '#000000' }}>ทั้งหมด</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={this.seleteType.bind(this, 'ผู้บริหาร')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
-                                <Text style={{ color: '#000000' }}>ผู้บริหาร</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={this.seleteType.bind(this, 'พี่เลี้ยง')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5 }} >
-                                <Text style={{ color: '#000000' }}>พี่เลี้ยง</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity onPress={this.seleteType.bind(this, 'แกนนำเด็ก')} style={{ alignItes: 'center', justifyContent: 'center', padding: 5, marginRight: 10 }} >
-                                <Text style={{ color: '#000000' }}>แกนนำเด็ก</Text>
-                            </TouchableOpacity>
-                        </FooterTab>
-                    </Footer>
-                    <Footer>
-                        <FooterTab style={styles.footer}>
+                    </Item>
+                </Header>
+                <Content>
+                    <ScrollView>
+                        {users.map((element, i) =>
+                            <View key={i} style={{ padding: 10, marginLeft: 10, marginRight: 10, flexDirection: 'row', justifyContent: 'space-between' }}>
+                                <Image source={{ uri: element.Avatar_URL }} style={{ width: 50, height: 50, borderRadius: 50, marginRight: 20 }} ></Image>
+                                <Text style={{ fontSize: 16, width: 150, marginRight: 5 }}>{element.Name} {'\n'} {element.work}</Text>
+                                <Text style={{ fontSize: 16 }}>{element.User_type}</Text>
+                            </View>
+                        )}
 
-                            <TouchableOpacity
-                                style={{ alignItems: 'center' }}
-                                onPress={() => this.props.navigation.navigate('Main')}
-                            >
-                                <Image
-                                    source={require('../assets/dropdown.png')}
-                                    style={{ width: 50, height: 50 }}></Image>
-                            </TouchableOpacity>
+                    </ScrollView>
+                </Content>
+                <Footer >
+                    <FooterTab style={styles.footer}>
+                        <TouchableOpacity onPress={this.clearSearch.bind(this)}  >
+                            <Text style={[{ color: '#000000', padding: 5, borderRadius: 10 }
+                                , this.state.userType === 'ทั้งหมด' && { backgroundColor: themeStyle.Color_green }]}>ทั้งหมด</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={this.seleteType.bind(this, 'ผู้บริหาร')} >
+                            <Text style={[{ color: '#000000', padding: 5, borderRadius: 10 }
+                                , this.state.userType === 'ผู้บริหาร' && { backgroundColor: themeStyle.Color_green }]}>ผู้บริหาร</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={this.seleteType.bind(this, 'พี่เลี้ยง')} >
+                            <Text style={[{ color: '#000000', padding: 5, borderRadius: 10 }
+                                , this.state.userType === 'พี่เลี้ยง' && { backgroundColor: themeStyle.Color_green }]}>พี่เลี้ยง</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={this.seleteType.bind(this, 'แกนนำเด็ก')} >
+                            <Text style={[{ color: '#000000', padding: 5, borderRadius: 10 }
+                                , this.state.userType === 'แกนนำเด็ก' && { backgroundColor: themeStyle.Color_green }]}>แกนนำเด็ก</Text>
+                        </TouchableOpacity>
+                    </FooterTab>
+                </Footer>
+                <Footer>
+                    <FooterTab style={styles.footer}>
+                        <TouchableOpacity
+                            onPress={() => this.props.navigation.navigate('Main')}
+                        >
+                            <Image
+                                source={require('../assets/dropdown.png')}
+                                style={{ width: 50, height: 50 }}></Image>
+                        </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={{ alignItems: 'center' }}
-                                onPress={() => this.props.navigation.navigate('ListUser')}
-                            >
-                                <Image
-                                    source={require('../assets/database.png')}
-                                    style={{ width: 50, height: 50 }}></Image>
-                            </TouchableOpacity>
-                            <TouchableOpacity
-                                style={{ alignItems: 'center', marginRight: 10 }}
-                                onPress={() => this.props.navigation.navigate('Profile')}
-                            >
-                                <Image
-                                    source={require('../assets/user.png')}
-                                    style={{ width: 50, height: 50 }}></Image>
-                            </TouchableOpacity>
-                        </FooterTab>
-                    </Footer>
-                </Container>
-            )
-        }
-
+                        <TouchableOpacity
+                            onPress={() => this.props.navigation.navigate('ListUser')}
+                        >
+                            <Image
+                                source={require('../assets/database.png')}
+                                style={{ width: 50, height: 50 }}></Image>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => this.props.navigation.navigate('Profile')}
+                        >
+                            <Image
+                                source={require('../assets/user.png')}
+                                style={{ width: 50, height: 50 }}></Image>
+                        </TouchableOpacity>
+                    </FooterTab>
+                </Footer>
+            </Container>
+        )
     }
 }
 

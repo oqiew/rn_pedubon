@@ -1,22 +1,23 @@
 import React, { Component } from 'react'
-import { View, TouchableOpacity, ScrollView, Image, ActivityIndicator, Alert } from 'react-native'
-import Firebase from '../Firebase';
-import Idelete from '../assets/trash_can.png';
-import Iedit from '../assets/pencil.png';
+import { View, TouchableOpacity, Image, Alert } from 'react-native'
 import styles from '../styles/main.styles';
-import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Picker, Text, Button, Icon } from 'native-base';
+import { Container, Content, FooterTab, Footer, Item, Label, Input, Picker, Text, Button, Icon } from 'native-base';
 import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
+import { TableName } from '../Database/constan';
+import { routeName } from '../routes/RouteConstant';
+import themeStyle from '../styles/theme.style';
+import Loading from '../components/Loading';
+import PDHeader from '../components/header';
 
 export class LocalCalendarScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbLocalCalendar = firestore().collection('LOCAL_CALENDARS');
+        this.tbLocalCalendars = firestore().collection(TableName.Local_calendars);
         //getl);
         this.state = {
-            status_add: false,
             edit_ID: '',
             //data class
             dataCalendar1: [],
@@ -39,33 +40,30 @@ export class LocalCalendarScreen extends Component {
 
 
     onCollectionUpdate = (querySnapshot) => {
-        console.log("calendar size", querySnapshot.size)
         const dataCalendar1 = [];
         const dataCalendar2 = [];
-        var count = 1;
-
         querySnapshot.forEach((doc) => {
             const { Name_activity, Month1, Month2, Type_activity } = doc.data();
             const mn1 = parseInt(Month1, 10);
             const mn2 = parseInt(Month2, 10);
-            var temp = [];
-
-
             if (Type_activity === 'เศรษฐกิจ') {
                 dataCalendar1.push({
                     Key: doc.id,
                     Name_activity,
                     Month1: this.state.mouth[mn1 - 1],
                     Month2: this.state.mouth[mn2 - 1],
+                    Month1db: Month1,
+                    Month2db: Month2,
                     Type_activity
                 });
             } else {
-
                 dataCalendar2.push({
                     Key: doc.id,
                     Name_activity,
                     Month1: this.state.mouth[mn1 - 1],
                     Month2: this.state.mouth[mn2 - 1],
+                    Month1db: Month1,
+                    Month2db: Month2,
                     Type_activity
                 });
             }
@@ -77,33 +75,28 @@ export class LocalCalendarScreen extends Component {
     }
 
     delete(id) {
-        firestore().collection('LOCAL_CALENDARS').doc(id).delete().then(() => {
+        this.tbLocalCalendars.doc(id).delete().then(() => {
             console.log("Document successfully deleted!");
 
         }).catch((error) => {
             console.error("Error removing document: ", error);
         });
     }
-    edit(id) {
+    edit(data) {
         this.setState({ loading: true });
-        firestore().collection('LOCAL_CALENDARS').doc(id).get().then((doc) => {
-            const { Name_activity, Type_activity } = doc.data();
-            const { mouth } = this.state;
-            const Month1 = parseInt(doc.data().Month1, 10);
-            const Month2 = parseInt(doc.data().Month2, 10);
-            const showMouth2 = [];
-            for (let index = Month1; index <= 12; index++) {
-                showMouth2.push(<Picker.Item key={index} label={mouth[index - 1] + ""} value={index} />)
-            }
-
-            this.setState({
-                Name_activity, Month1, Month2, Type_activity, edit_ID: id, selected: 3, loading: false, showMouth2
-            })
+        const { Name_activity, Type_activity } = data;
+        const { mouth } = this.state;
+        const Month1 = parseInt(data.Month1db, 10);
+        const Month2 = parseInt(data.Month2db, 10);
+        const showMouth2 = [];
+        for (let index = Month1; index <= 12; index++) {
+            showMouth2.push(<Picker.Item key={index} label={mouth[index - 1] + ""} value={index} />)
+        }
+        this.setState({
+            Name_activity, Month1, Month2, Type_activity, edit_ID: data.Key, selected: 3, loading: false, showMouth2
+        })
 
 
-        }).catch((error) => {
-            console.error("Error document: ", error);
-        });
     }
     cancelEdit = (e) => {
         this.setState({
@@ -114,12 +107,11 @@ export class LocalCalendarScreen extends Component {
         this.authListener();
     }
     authListener() {
-        if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Home');
+        if (isEmptyValue(this.state.uid)) {
+            this.props.navigation.navigate(routeName.Home);
         } else {
-            const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
-            this.unsubscribe = this.tbLocalCalendar
-                .where('Area_PID', '==', Area_PID).where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID)
+            const { Area_ID, } = this.state;
+            this.unsubscribe = this.tbLocalCalendars
                 .where('Area_ID', '==', Area_ID)
                 .onSnapshot(this.onCollectionUpdate);
             this.genrateMonth(0, 0);
@@ -157,9 +149,7 @@ export class LocalCalendarScreen extends Component {
         }
         for (let index = mn1; index <= 12; index++) {
             showMouth2.push(<Picker.Item key={index} label={mouth[index - 1] + ""} value={index} />)
-
         }
-
         this.setState({
             showMouth1,
             showMouth2
@@ -168,8 +158,8 @@ export class LocalCalendarScreen extends Component {
     onSubmit = e => {
         e.preventDefault()
         this.setState({ loading: true });
-        const { Name_activity, Month1, Month2, User_ID, Type_activity, Name, edit_ID,
-            Area_ID, Area_PID, Area_DID, Area_SDID,
+        const { Name_activity, Month1, Month2, uid, Type_activity, Name, edit_ID,
+            Area_ID,
         } = this.state;
         if (Name_activity === '' || Month1 === '' || Month2 === '' || Type_activity === '') {
             this.setState({
@@ -177,11 +167,11 @@ export class LocalCalendarScreen extends Component {
             });
             Alert.alert("กรุณากรอกข้อมูลให้ครบ");
         } else {
-            if (edit_ID !== '') {
-                this.tbLocalCalendar.doc(edit_ID).set({
+            if (!isEmptyValue(edit_ID)) {
+                this.tbLocalCalendars.doc(edit_ID).set({
                     Name_activity, Type_activity
-                    , Month1, Month2, Informer_ID: User_ID, Informer_name: Name
-                    , Area_ID, Area_PID, Area_DID, Area_SDID
+                    , Month1, Month2, Informer_ID: uid, Informer_name: Name
+                    , Area_ID
                 }).then((docRef) => {
                     this.setState({
                         Name_activity: "", Month1: "", Month2: "", Type_activity: '',
@@ -198,10 +188,10 @@ export class LocalCalendarScreen extends Component {
                 });
 
             } else {
-                this.tbLocalCalendar.add({
-                    Name_activity, Type_activity
-                    , Month1, Month2, Informer_ID: User_ID, Informer_name: Name
-                    , Area_ID, Area_PID, Area_DID, Area_SDID
+                this.tbLocalCalendars.add({
+                    Name_activity, Type_activity, Create_date: firestore.Timestamp.now()
+                    , Month1, Month2, Informer_ID: uid, Informer_name: Name
+                    , Area_ID
                 }).then((docRef) => {
                     this.setState({
                         Name_activity: "", Month1: "", Month2: "", Type_activity: '',
@@ -222,17 +212,19 @@ export class LocalCalendarScreen extends Component {
 
 
     }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Main)
+    }
     render() {
         const { Month1, Month2, Name_activity, Type_activity } = this.state;
-        if (this.state.loading) {
-            return (<ActivityIndicator size={'large'}></ActivityIndicator>)
-        } else {
-            return (
-                <Container>
-                    <Text style={styles.title}>บ้าน {this.state.Ban_name}หมู่ที่{this.state.Area_ID + 1}</Text>
 
-                    {this.state.selected === 1 ?
-                        <Content>
+        return (
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name={'ปฏิทินชุมชน'} backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                <Content contentContainerStyle={{ padding: 15 }}>
+                    {this.state.selected === 1 &&
+                        <>
                             <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
                                 <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
                                 <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ช่วงเวลา</Text>
@@ -246,7 +238,7 @@ export class LocalCalendarScreen extends Component {
                                     <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>
                                         {element.Month1}-{element.Month2}</Text>
                                     <View style={{ margin: 10, width: '20%', flexDirection: 'row' }}>
-                                        <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
+                                        <TouchableOpacity onPress={this.edit.bind(this, element)}>
                                             <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
@@ -267,7 +259,7 @@ export class LocalCalendarScreen extends Component {
                                     <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>
                                         {element.Month1}-{element.Month2}</Text>
                                     <View style={{ margin: 10, width: '20%', flexDirection: 'row' }}>
-                                        <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
+                                        <TouchableOpacity onPress={this.edit.bind(this, element)}>
                                             <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                         </TouchableOpacity>
                                         <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
@@ -277,11 +269,11 @@ export class LocalCalendarScreen extends Component {
                                 </View>
                             )}
 
-                        </Content> : <View></View>
+                        </>
                     }
 
-                    {this.state.selected === 3 ?
-                        <Content style={{ padding: 20 }}>
+                    {this.state.selected === 3 &&
+                        < >
                             <Item fixedLabel >
                                 <Label>ชื่อ</Label>
                                 <Input value={Name_activity}
@@ -291,8 +283,8 @@ export class LocalCalendarScreen extends Component {
                                 <Label>ประเภท</Label>
                                 <Picker
                                     selectedValue={Type_activity}
-                                    placeholder="เลือกประเภทกิจกรรม"
                                     onValueChange={str => this.setState({ Type_activity: str })}>
+                                    <Picker.Item key="0" label="เลือกประเภทกิจกรรม" value="" />
                                     <Picker.Item key="1" label="วัฒนธรรมประเพณี" value="วัฒนธรรมประเพณี" />
                                     <Picker.Item key="2" label="เศรษฐกิจ" value="เศรษฐกิจ" />
                                 </Picker>
@@ -301,8 +293,8 @@ export class LocalCalendarScreen extends Component {
                                 <Label>เดือนที่เริ่ม</Label>
                                 <Picker
                                     selectedValue={Month1}
-                                    placeholder="เลือกเดือนที่เริ่ม"
                                     onValueChange={str => this.genrateMonth(str, 1)}>
+                                    <Picker.Item key="0" label="เลือกเดือนที่เริ่ม" value="" />
                                     {this.state.showMouth1}
 
                                 </Picker>
@@ -311,8 +303,8 @@ export class LocalCalendarScreen extends Component {
                                 <Label>เดือนที่สิ้นสุด</Label>
                                 <Picker
                                     selectedValue={Month2}
-                                    placeholder="เลือกเดือนที่สิ้นสุด"
                                     onValueChange={str => this.genrateMonth(str, 2)}>
+                                    <Picker.Item key="0" label="เลือกเดือนที่สิ้นสุด" value="" />
                                     {this.state.showMouth2}
 
                                 </Picker>
@@ -329,24 +321,26 @@ export class LocalCalendarScreen extends Component {
                                     <Text>กลับ</Text></Button>
                             </View>
 
-                        </Content>
+                        </>
 
-                        : <View></View>
+
                     }
-                    <Footer>
-                        <FooterTab style={styles.footer}>
-                            <TouchableOpacity onPress={() => this.setState({ selected: 1 })}>
-                                <Text style={{ textAlign: 'center', marginLeft: '30%' }}>ปฏิทิน</Text>
-                            </TouchableOpacity>
+                </Content>
+                <Footer>
+                    <FooterTab style={styles.footer}>
+                        <TouchableOpacity onPress={() => this.setState({ selected: 1 })}>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 1 && { backgroundColor: themeStyle.Color_green }]}>ปฏิทิน</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 3 && { backgroundColor: themeStyle.Color_green }]}>เพิ่มข้อมูล</Text>
+                        </TouchableOpacity>
+                    </FooterTab>
+                </Footer>
+            </Container>
+        )
 
-                            <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
-                                <Text style={{ textAlign: 'center', marginRight: '30%' }}>เพิ่มข้อมูล</Text>
-                            </TouchableOpacity>
-                        </FooterTab>
-                    </Footer>
-                </Container>
-            )
-        }
 
     }
 

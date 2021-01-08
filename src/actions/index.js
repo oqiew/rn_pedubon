@@ -18,7 +18,7 @@ export const fetch_user = (data) => {
     // console.log(data)
     return (dispatch) => {
         dispatch(setStageToFetching());
-        if (!isEmptyValue(data.User_ID)) {
+        if (!isEmptyValue(data.uid)) {
             dispatch(setStageToScuccess(data));
         } else {
             dispatch(setStageToFetching());

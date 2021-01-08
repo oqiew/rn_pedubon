@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-
 export default StyleSheet.create({
     container: {
         flex: 1,
@@ -8,6 +7,27 @@ export default StyleSheet.create({
         alignItems: 'center',
         alignContent: 'center',
         margin: 20,
+    },
+    content: {
+        flex:
+            1,
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        margin: 10,
+    },
+    item: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        margin: 10
+    },
+    autocompleteContainer: {
+        flex: 1,
+        left: 0,
+        position: 'absolute',
+        right: 0,
+        top: 0,
+        zIndex: 1
     },
     tools: {
         alignItems: 'center',
@@ -103,7 +123,8 @@ export default StyleSheet.create({
     },
     footer: {
         backgroundColor: '#ffffff',
-        alignItems: 'center'
+        alignItems: 'center',
+        justifyContent: 'space-around'
     },
     title: {
         fontSize: 20,

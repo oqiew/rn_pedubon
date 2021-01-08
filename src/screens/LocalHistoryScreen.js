@@ -10,71 +10,63 @@ import { connect } from 'react-redux';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Text, Button, Icon } from 'native-base';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
+import { TableName } from '../Database/constan';
+import { routeName } from '../routes/RouteConstant';
+import Loading from '../components/Loading';
+import themeStyle from '../styles/theme.style';
+import PDHeader from '../components/header';
 export class LocalHistoryScreen extends Component {
     constructor(props) {
         super(props);
-        this.tbLocalHistory = firestore().collection('LOCAL_HISTORYS');
+        this.tbLocalHistorys = firestore().collection(TableName.Local_historys);
         //getl);
         this.state = {
             dataTimeline: [],
             localHistorys: [],
             statusSave: "",
-
             listYear: [],
+            loading: false,
             //data
             Name_activity: "",
             Description: "",
             Year_start: "",
-
             //data
             status_add: false,
             Ban_name: '',
             edit_ID: '',
-
             //getuser
             ...this.props.fetchReducer.user,
-
             //select
             selected: 1,
         }
-
     }
     componentDidMount() {
         this.authListener();
     }
     authListener() {
-        if (isEmptyValue(this.state.User_ID)) {
-            this.props.navigation.navigate('Home');
+        if (isEmptyValue(this.state.uid)) {
+            this.props.navigation.navigate(routeName.Home);
         } else {
-            const { Area_ID, Area_PID, Area_DID, Area_SDID, Name } = this.state;
-            this.unsubscribe = this.tbLocalHistory
-                .where('Area_PID', '==', Area_PID).where('Area_DID', '==', Area_DID).where('Area_SDID', '==', Area_SDID)
+            const { Area_ID } = this.state;
+            this.unsubscribe = this.tbLocalHistorys
                 .where('Area_ID', '==', Area_ID)
                 .onSnapshot(this.onCollectionUpdate);
         }
-
-
     }
-
-
     delete(id) {
-        this.tbLocalHistory.doc(id).delete().then(() => {
+        this.tbLocalHistorys.doc(id).delete().then(() => {
             console.log("Document successfully deleted!");
 
         }).catch((error) => {
             console.error("Error removing document: ", error);
         });
     }
-    edit(id) {
-        this.tbLocalHistory.doc(id).get().then((doc) => {
-            const { Name_activity, Description, Year_start } = doc.data();
-            this.setState({
-                Name_activity, Description, Year_start, edit_ID: id, selected: 3
-            })
+    edit(data) {
+        const { Name_activity, Description, Year_start } = data;
+        this.setState({
+            Name_activity, Description, Year_start, edit_ID: data.Key, selected: 3
+        })
 
-        }).catch((error) => {
-            console.error("Error document: ", error);
-        });
     }
     cancelEdit = (e) => {
         this.setState({
@@ -82,11 +74,10 @@ export class LocalHistoryScreen extends Component {
         })
     }
     onCollectionUpdate = (querySnapshot) => {
-
+        this.setState({ loading: true })
         const dataTimeline = [];
         const localHistorys = [];
         var count = 1;
-
         querySnapshot.forEach((doc) => {
             const { Name_activity, Year_start, Description, Informer_name } = doc.data();
 
@@ -94,12 +85,8 @@ export class LocalHistoryScreen extends Component {
                 Key: doc.id,
                 Name_activity, Description, Year_start, Informer_name,
             });
-
-
-
             count++;
         });
-
         this.setState({
             localHistorys
         });
@@ -119,7 +106,6 @@ export class LocalHistoryScreen extends Component {
                     return;
                 }
             });
-
             if (temp) {
                 dataTimeline.push(
                     { time: element.Year_start, title: element.Name_activity, description: element.Description });
@@ -127,11 +113,10 @@ export class LocalHistoryScreen extends Component {
                 dataTimeline.push(
                     { time: '', title: element.Name_activity, description: element.Description });
             }
-
         });
-
         this.setState({
-            dataTimeline
+            dataTimeline,
+            loading: false
         });
 
     }
@@ -142,91 +127,105 @@ export class LocalHistoryScreen extends Component {
             return 0;
         };
     }
-
     sortBy(key) {
         let arrayCopy = [...this.state.localHistorys];
         arrayCopy.sort(this.compareBy(key));
         this.setState({ localHistorys: arrayCopy });
     }
-
-
     onChange = (e) => {
         const state = this.state
         state[e.target.name] = e.target.value;
         this.setState(state);
-
-
-
     }
-
     onSubmit = e => {
         e.preventDefault()
-        const { Name_activity, Description, Year_start, Area_ID, Area_PID, Area_DID, Area_SDID, Name, User_ID, edit_ID } = this.state;
+        this.setState({ loading: true })
+        const { Name_activity, Description, Year_start, Area_ID, Area_PID, Area_DID, Area_SDID, Name, uid, edit_ID } = this.state;
         if (Year_start.length < 4) {
             Alert.alert('บันทึกไม่สำเร็จ ปีไม่ถูกต้อง');
+            this.setState({
+                loading: false
+            });
 
         } else if (Name_activity === '' || Description === '' || Year_start === '') {
             Alert.alert('บันทึกไม่สำเร็จ กรุณากรอกข้อมูลให้ครบ');
-
+            this.setState({
+                loading: false
+            });
         } else {
             if (edit_ID !== '') {
-                this.tbLocalHistory.doc(edit_ID).set({
-                    Name_activity, Description
-                    , Year_start, Informer_ID: User_ID, Informer_name: Name
+                this.tbLocalHistorys.doc(edit_ID).set({
+                    Name_activity, Description,
+                    Update_date: firestore.Timestamp.now()
+                    , Year_start, Informer_ID: uid, Informer_name: Name
                     , Area_ID, Area_PID, Area_DID, Area_SDID,
                 }).then((docRef) => {
                     Alert.alert('บันทึกข้อมูลสำเร็จ');
                     this.setState({
                         Name_activity: "", Year_start: "", Description: "", edit_ID: '',
-                        selected: 1,
+                        selected: 1, loading: false
                     });
 
                 })
                     .catch((error) => {
                         Alert.alert('บันทึกข้อมูลไม่สำเร็จ');
                         console.error("Error adding document: ", error);
+                        this.setState({
+                            loading: false
+                        });
                     });
             } else {
-                this.tbLocalHistory.add({
-                    Name_activity, Description
-                    , Year_start, Informer_ID: User_ID, Informer_name: Name
+                this.tbLocalHistorys.add({
+                    Name_activity, Description,
+                    Create_date: firestore.Timestamp.now()
+                    , Year_start, Informer_ID: uid, Informer_name: Name
                     , Area_ID, Area_PID, Area_DID, Area_SDID,
                 }).then((docRef) => {
                     Alert.alert('บันทึกมูลสำเร็จ');
                     this.setState({
                         Name_activity: "", Year_start: "", Description: "",
-                        selected: 1,
+                        selected: 1, loading: false
                     });
 
                 })
                     .catch((error) => {
                         Alert.alert('บันทึกมูลไม่สำเร็จ');
                         console.error("Error adding document: ", error);
+                        this.setState({
+                            loading: false
+                        });
                     });
             }
         }
-
-
-
-
-
+    }
+    onBack = () => {
+        this.props.navigation.navigate(routeName.Main)
     }
     render() {
-        const { Name_activity, Description, Year_start } = this.state;
+        const { Name_activity, Description, Year_start, dataTimeline } = this.state;
 
         return (
-            <Container>
-                <Text style={styles.title}>บ้าน {this.state.Ban_name}หมู่ที่{this.state.Area_ID + 1}</Text>
-                {this.state.selected === 1 ?
-                    <Timeline
-                        lineColor='rgb(45,156,219)'
-                        timeStyle={{ color: 'red', }}
-                        descriptionStyle={{ color: 'gray' }}
-                        data={this.state.dataTimeline}
-                    /> : <View></View>
+            <Container style={{ backgroundColor: themeStyle.background }}>
+                <PDHeader name="ประวัติศาสตตร์ชุมชน" backHandler={this.onBack}></PDHeader>
+                <Loading visible={this.state.loading}></Loading>
+                {this.state.selected === 1 &&
+                    (dataTimeline.length === 0 ?
+                        <Content contentContainerStyle={{ padding: 15 }}>
+                            <Text style={{ textAlign: "center" }}>ยังไม่มีข้อมูล</Text>
+                        </Content>
+                        :
+
+                        <Timeline
+                            style={{ padding: 15 }}
+                            lineColor='rgb(45,156,219)'
+                            timeStyle={{ color: 'red', }}
+                            descriptionStyle={{ color: 'gray' }}
+                            data={dataTimeline}
+                        />)
+
                 }
                 {this.state.selected === 2 ?
-                    <Content style={{ padding: 20 }}>
+                    <Content contentContainerStyle={{ padding: 15 }}>
                         <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
                             <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
                             <Text style={{ fontWeight: 'bold', margin: 10, width: '25%', textAlign: 'center' }}>ผู้เพิ่มข้อมูล</Text>
@@ -243,7 +242,7 @@ export class LocalHistoryScreen extends Component {
                                 </View>
                                 <Text style={{ margin: 10, width: '25%', textAlign: 'center' }}>{element.Informer_name}</Text>
                                 <View style={{ margin: 10, width: '20%', textAlign: 'center', flexDirection: 'row' }}>
-                                    <TouchableOpacity onPress={this.edit.bind(this, element.Key)}>
+                                    <TouchableOpacity onPress={this.edit.bind(this, element)}>
                                         <Image source={require('../assets/pencil.png')} style={{ width: 25, height: 25, justifyContent: 'center' }}></Image>
                                     </TouchableOpacity>
                                     <TouchableOpacity onPress={this.delete.bind(this, element.Key)}>
@@ -258,7 +257,7 @@ export class LocalHistoryScreen extends Component {
                     </Content> : <View></View>
                 }
                 {this.state.selected === 3 ?
-                    <Content style={{ padding: 20 }}>
+                    <Content contentContainerStyle={{ padding: 15 }}>
                         <Item fixedLabel >
                             <Label>ชื่อเหตุการณ์ :</Label>
                             <Input value={Name_activity}
@@ -271,7 +270,9 @@ export class LocalHistoryScreen extends Component {
                         </Item>
                         <Item fixedLabel >
                             <Label>ปีที่เริ่ม :</Label>
-                            <Input value={Year_start} maxLength={4} onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
+                            <Input value={Year_start} maxLength={4}
+                                keyboardType={"number-pad"}
+                                onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
                         </Item>
                         <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>
                             <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
@@ -289,13 +290,16 @@ export class LocalHistoryScreen extends Component {
                 <Footer>
                     <FooterTab style={styles.footer}>
                         <TouchableOpacity onPress={() => this.setState({ selected: 1 })}>
-                            <Text style={{ textAlign: 'center', marginLeft: 30 }}>Timeline</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 1 && { backgroundColor: themeStyle.Color_green }]}>Timeline</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => this.setState({ selected: 2 })}>
-                            <Text style={{ textAlign: 'center' }}>ตารางข้อมูล</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 2 && { backgroundColor: themeStyle.Color_green }]}>ตารางข้อมูล</Text>
                         </TouchableOpacity>
                         <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
-                            <Text style={{ textAlign: 'center', marginRight: 30 }}>เพิ่มข้อมูล</Text>
+                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                , this.state.selected === 3 && { backgroundColor: themeStyle.Color_green }]}>เพิ่มข้อมูล</Text>
                         </TouchableOpacity>
                     </FooterTab>
                 </Footer>

@@ -23,12 +23,13 @@ import ProfileScreen from './screens/ProfileScreen';
 import ListUserScreen from './screens/ListUserScreen';
 import ProfileEditScreen from './screens/ProfileEditScreen';
 import MapsScreen from './screens/MapsScreen';
-import SelectBanScreen from './screens/SelectBanScreen';
 import SocialMapsScreen from './screens/SocialMapsScreen';
 import LocalCalendarScreen from './screens/LocalCalendarScreen';
 import LocalHistoryScreen from './screens/LocalHistoryScreen';
 import PersonHistoryScreen from './screens/PersonHistoryScreen';
 import PersonsScreen from './screens/PersonsScreen';
+import NewProfileScreen from './screens/profile/NewProfileScreen';
+import { routeName } from './routes/RouteConstant'
 const Stack = createStackNavigator();
 
 function App() {
@@ -44,74 +45,71 @@ function App() {
                 }}
             >
                 <Stack.Screen
-                    name="Home"
+                    name={routeName.Home}
                     component={HomeScreen}
                     options={{ title: 'PEDUbon', headerShown: false, }}
                 />
                 <Stack.Screen
-                    name="Register"
+                    name={routeName.Register}
                     component={RegisterScreen}
                     options={{ title: 'สมัครสมาชิก', headerShown: false, }}
                 />
 
                 <Stack.Screen
-                    name="Main"
+                    name={routeName.Main}
                     component={MainScreen}
                     options={{ title: 'หน้าหลัก', headerShown: false, }}
                 />
                 <Stack.Screen
-                    name="Profile"
+                    name={routeName.Profile}
                     component={ProfileScreen}
-                    options={{ title: 'โปรไฟล์', headerShown: true, }}
+                    options={{ title: 'โปรไฟล์', headerShown: false, }}
                 />
                 <Stack.Screen
-                    name="ListUser"
+                    name={routeName.ListUser}
                     component={ListUserScreen}
-                    options={{ title: 'ทำเนียบ', headerShown: true }}
+                    options={{ title: 'ทำเนียบ', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="ProfileEdit"
+                    name={routeName.ProfileEdit}
                     component={ProfileEditScreen}
-                    options={{ title: 'แก้ไขโปรไฟล์', headerShown: true }}
+                    options={{ title: 'แก้ไขโปรไฟล์', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="Maps"
+                    name={routeName.NewProfile}
+                    component={NewProfileScreen}
+                    options={{ title: 'เพิ่มข้อมูลโปรไฟล์', headerShown: false }}
+                />
+                <Stack.Screen
+                    name={routeName.Maps}
                     component={MapsScreen}
-                    options={{ title: 'แผนที่ข้อมูล', headerShown: true }}
+                    options={{ title: 'แผนที่ข้อมูล', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="SelectBan"
-                    component={SelectBanScreen}
-                    options={{ title: 'เลือกหมู่บ้าน', headerShown: true }}
-                />
-                <Stack.Screen
-                    name="SocialMaps"
+                    name={routeName.SocialMaps}
                     component={SocialMapsScreen}
-                    options={{ title: 'เพิ่มข้อมูลชุมชน', headerShown: true }}
+                    options={{ title: 'เพิ่มข้อมูลชุมชน', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="LocalCalendar"
+                    name={routeName.LocalCalendar}
                     component={LocalCalendarScreen}
-                    options={{ title: 'ปฏิทินชุมชน', headerShown: true }}
+                    options={{ title: 'ปฏิทินชุมชน', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="LocalHistory"
+                    name={routeName.LocalHistory}
                     component={LocalHistoryScreen}
-                    options={{ title: 'ประวัติศาสตร์ชุมชน', headerShown: true }}
+                    options={{ title: 'ประวัติศาสตร์ชุมชน', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="Persons"
+                    name={routeName.Persons}
                     component={PersonsScreen}
-                    options={{ title: 'บุคคลที่น่าสนใจ', headerShown: true }}
+                    options={{ title: 'บุคคลที่น่าสนใจ', headerShown: false }}
                 />
                 <Stack.Screen
-                    name="PersonHistory"
+                    name={routeName.PersonHistory}
                     component={PersonHistoryScreen}
-                    options={{ title: 'ประวัติบุคคลที่น่าสนใจ', headerShown: true }}
+                    options={{ title: 'ประวัติบุคคลที่น่าสนใจ', headerShown: false }}
                 />
-
-
-
             </Stack.Navigator>
         </NavigationContainer>
     )
