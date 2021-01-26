@@ -8,6 +8,7 @@ import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import firestore from '@react-native-firebase/firestore';
 import { TableName } from '../Database/constan';
+import { isEmptyValue } from '../components/Methods';
 
 export class MainScreen extends Component {
     constructor(props) {
@@ -16,7 +17,7 @@ export class MainScreen extends Component {
         this.state = {
             loading: false,
             ...this.props.fetchReducer.user,
-            AreaName: ''
+
         }
     }
     UNSAFE_componentWillReceiveProps(nextProps) {
@@ -25,25 +26,21 @@ export class MainScreen extends Component {
         })
     }
     componentDidMount() {
-        this.getArea()
+
     }
-    getArea = () => {
-        this.tbAreas.doc(this.state.Area_ID).get().then((doc) => {
-            this.setState({
-                AreaName: doc.data().Dominance + doc.data().Area_name
-            })
-        })
-    }
+
     render() {
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
                 <Content contentContainerStyle={{ padding: 15 }}>
                     <Text style={{ textAlign: 'center', fontSize: 24 }}>
-                        {this.state.AreaName}</Text>
+                        {this.state.area_name}</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 24 }}>
+                        ({this.state.area_type})</Text>
                     <Grid>
                         <Col style={{ height: 200, padding: 10 }}>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', padding: 10 }}
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.Maps)}
                             >
                                 <Image
@@ -53,7 +50,7 @@ export class MainScreen extends Component {
                                     แผนที่ทั้งหมด</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', padding: 10 }}
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.LocalCalendar)}
                             >
                                 <Image
@@ -64,7 +61,7 @@ export class MainScreen extends Component {
                     </Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', padding: 10 }}
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.Persons)}
                             >
                                 <Image
@@ -77,7 +74,7 @@ export class MainScreen extends Component {
                         </Col>
                         <Col style={{ height: 500, padding: 10 }}>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', padding: 10 }}
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.SocialMaps)}
                             >
                                 <Image
@@ -87,7 +84,7 @@ export class MainScreen extends Component {
                                     แผนที่ชุมชน</Text>
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={{ alignItems: 'center', padding: 10 }}
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.LocalHistory)}
                             >
                                 <Image
@@ -97,6 +94,18 @@ export class MainScreen extends Component {
                                     ประวัติศาสตตร์{'\n'}ชุมชน
                     </Text>
                             </TouchableOpacity>
+
+                            {!isEmptyValue(this.state.Role) && this.state.Role === 'admin' && <TouchableOpacity
+                                style={{ alignItems: 'center', padding: 10, height: 120 }}
+                                onPress={() => this.props.navigation.navigate(routeName.AddBan)}
+                            >
+                                <Image
+                                    source={require('../assets/list.png')}
+                                    style={{ width: 75, height: 75 }}></Image>
+                                <Text style={{ fontSize: 16, textAlign: 'center' }}>
+                                    เพิ่มหมู่บ้าน{'\n'}
+                                </Text>
+                            </TouchableOpacity>}
                         </Col>
                     </Grid>
                 </Content>

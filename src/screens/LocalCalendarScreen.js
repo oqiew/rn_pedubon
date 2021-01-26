@@ -11,11 +11,13 @@ import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import Loading from '../components/Loading';
 import PDHeader from '../components/header';
+import { element } from 'prop-types';
 
 export class LocalCalendarScreen extends Component {
     constructor(props) {
         super(props);
         this.tbLocalCalendars = firestore().collection(TableName.Local_calendars);
+        this.tbBans = firestore().collection(TableName.Bans)
         //getl);
         this.state = {
             edit_ID: '',
@@ -28,17 +30,37 @@ export class LocalCalendarScreen extends Component {
             mouth: ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."],
             showMouth1: [],
             showMouth2: [],
-            Name_activity: "",
+            Name_activity: '',
+            ban: '',
+            selected_ban: {
+                Name: '',
+                ID: ''
+            },
+            query_bans: [],
+            bans: [],
             //getuser
             ...this.props.fetchReducer.user,
             selected: 1,
             loading: false,
 
+
         }
     }
 
 
-
+    onListBans = (query) => {
+        const query_bans = [];
+        query.forEach(doc => {
+            query_bans.push({
+                ID: doc.id,
+                ...doc.data()
+            })
+        });
+        this.setState({
+            query_bans,
+            bans: query_bans
+        })
+    }
     onCollectionUpdate = (querySnapshot) => {
         const dataCalendar1 = [];
         const dataCalendar2 = [];
@@ -95,12 +117,10 @@ export class LocalCalendarScreen extends Component {
         this.setState({
             Name_activity, Month1, Month2, Type_activity, edit_ID: data.Key, selected: 3, loading: false, showMouth2
         })
-
-
     }
     cancelEdit = (e) => {
         this.setState({
-            Name_activity: '', Month1: '', Month2: '', Type_activity: '', edit_ID: '', selected: 1
+            Name_activity: '', Month1: '', Month2: '', Type_activity: '', edit_ID: '', selected: 2
         })
     }
     componentDidMount() {
@@ -110,18 +130,15 @@ export class LocalCalendarScreen extends Component {
         if (isEmptyValue(this.state.uid)) {
             this.props.navigation.navigate(routeName.Home);
         } else {
-            const { Area_ID, } = this.state;
-            this.unsubscribe = this.tbLocalCalendars
-                .where('Area_ID', '==', Area_ID)
-                .onSnapshot(this.onCollectionUpdate);
+            if (!isEmptyValue(this.state.selected_ban.ID)) {
+                this.unsubscribe = this.tbLocalCalendars
+                    .where('Ban_ID', '==', this.state.selected_ban.ID)
+                    .onSnapshot(this.onCollectionUpdate);
+            }
             this.genrateMonth(0, 0);
+            this.tbBans.onSnapshot(this.onListBans)
         }
-
-
     }
-
-
-
     genrateMonth(str, d) {
 
         var Month1 = 1;
@@ -159,71 +176,115 @@ export class LocalCalendarScreen extends Component {
         e.preventDefault()
         this.setState({ loading: true });
         const { Name_activity, Month1, Month2, uid, Type_activity, Name, edit_ID,
-            Area_ID,
+            Area_ID, selected_ban
         } = this.state;
-        if (Name_activity === '' || Month1 === '' || Month2 === '' || Type_activity === '') {
+        if (!isEmptyValue(selected_ban.ID)) {
+            if (Name_activity === '' || Month1 === '' || Month2 === '' || Type_activity === '') {
+                this.setState({
+                    loading: false
+                });
+                Alert.alert("กรุณากรอกข้อมูลให้ครบ");
+            } else {
+                if (!isEmptyValue(edit_ID)) {
+                    this.tbLocalCalendars.doc(edit_ID).set({
+                        Name_activity, Type_activity
+                        , Month1, Month2, Informer_ID: uid, Informer_name: Name
+                        , Ban_ID: this.state.selected_ban.ID,
+                    }).then((docRef) => {
+                        this.setState({
+                            Name_activity: "", Month1: "", Month2: "", Type_activity: '',
+                            selected: 2, edit_ID: '', loading: false
+                        });
+                        Alert.alert("บันทึกข้อมูลสำเร็จ");
+
+                    }).catch((error) => {
+                        this.setState({
+                            loading: false
+                        });
+                        Alert.alert("บันทึกข้อมูลไม่สำเร็จ");
+                        console.error("Error adding document: ", error);
+                    });
+
+                } else {
+                    this.tbLocalCalendars.add({
+                        Name_activity, Type_activity, Create_date: firestore.Timestamp.now()
+                        , Month1, Month2, Informer_ID: uid, Informer_name: Name
+                        , Area_ID, Ban_ID: this.state.selected_ban.ID,
+                    }).then((docRef) => {
+                        this.setState({
+                            Name_activity: "", Month1: "", Month2: "", Type_activity: '',
+                            selected: 2, loading: false
+                        });
+                        Alert.alert("บันทึกข้อมูลสำเร็จ");
+
+                    }).catch((error) => {
+                        this.setState({
+                            loading: false
+                        });
+                        Alert.alert("บันทึกข้อมูลไม่สำเร็จ");
+                        console.error("Error adding document: ", error);
+                    });
+
+                }
+            }
+        } else {
+            console.log('ban null')
             this.setState({
                 loading: false
             });
-            Alert.alert("กรุณากรอกข้อมูลให้ครบ");
-        } else {
-            if (!isEmptyValue(edit_ID)) {
-                this.tbLocalCalendars.doc(edit_ID).set({
-                    Name_activity, Type_activity
-                    , Month1, Month2, Informer_ID: uid, Informer_name: Name
-                    , Area_ID
-                }).then((docRef) => {
-                    this.setState({
-                        Name_activity: "", Month1: "", Month2: "", Type_activity: '',
-                        selected: 1, edit_ID: '', loading: false
-                    });
-                    Alert.alert("บันทึกข้อมูลสำเร็จ");
-
-                }).catch((error) => {
-                    this.setState({
-                        loading: false
-                    });
-                    Alert.alert("บันทึกข้อมูลไม่สำเร็จ");
-                    console.error("Error adding document: ", error);
-                });
-
-            } else {
-                this.tbLocalCalendars.add({
-                    Name_activity, Type_activity, Create_date: firestore.Timestamp.now()
-                    , Month1, Month2, Informer_ID: uid, Informer_name: Name
-                    , Area_ID
-                }).then((docRef) => {
-                    this.setState({
-                        Name_activity: "", Month1: "", Month2: "", Type_activity: '',
-                        selected: 1, loading: false
-                    });
-                    Alert.alert("บันทึกข้อมูลสำเร็จ");
-
-                }).catch((error) => {
-                    this.setState({
-                        loading: false
-                    });
-                    Alert.alert("บันทึกข้อมูลไม่สำเร็จ");
-                    console.error("Error adding document: ", error);
-                });
-
-            }
         }
 
 
+    }
+    onSearchBan = (ban) => {
+        const { query_bans } = this.state;
+        const regex = new RegExp(`${ban.trim()}`, 'i');
+        const bans = query_bans.filter(ban => ban.Name.search(regex) >= 0)
+        this.setState({
+            bans,
+            ban
+        })
+    }
+    onSelectedBan(Name, ID) {
+        this.unsubscribe = this.tbLocalCalendars
+            .where('Ban_ID', '==', ID)
+            .onSnapshot(this.onCollectionUpdate);
+        this.setState({
+            selected_ban: { Name, ID },
+            selected: 2
+        })
     }
     onBack = () => {
         this.props.navigation.navigate(routeName.Main)
     }
     render() {
-        const { Month1, Month2, Name_activity, Type_activity } = this.state;
+        const { Month1, Month2, Name_activity, Type_activity, ban, bans, selected_ban } = this.state;
 
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
-                <PDHeader name={'ปฏิทินชุมชน'} backHandler={this.onBack}></PDHeader>
+                <PDHeader name={'ปฏิทินชุมชน' + selected_ban.Name} backHandler={this.onBack}></PDHeader>
                 <Loading visible={this.state.loading}></Loading>
                 <Content contentContainerStyle={{ padding: 15 }}>
                     {this.state.selected === 1 &&
+                        <>
+                            <Text style={{ fontSize: 24, textAlign: 'center' }}>เลือกหมู่บ้าน</Text>
+                            <Item fixedLabel style={{ marginTop: 5 }}>
+                                <Label>อปท :</Label>
+                                <Input value={ban}
+                                    placeholder="ค้นหา อปท"
+                                    onChangeText={str => this.onSearchBan(str)} />
+                            </Item>
+                            {bans.map((element, i) =>
+                                <TouchableOpacity style={{
+                                    margin: 5, padding: 5, backgroundColor: '#ff80c0'
+                                    , borderRadius: 5
+                                }} onPress={this.onSelectedBan.bind(this, element.Name, element.ID)}>
+                                    <Text style={{ color: "#ffffff", textAlign: "center" }}>{element.Name}</Text>
+                                </TouchableOpacity>
+                            )}
+                        </>
+                    }
+                    {this.state.selected === 2 &&
                         <>
                             <View style={{ flex: 1, flexDirection: 'row', borderBottomWidth: 1 }}>
                                 <Text style={{ fontWeight: 'bold', margin: 10, width: '35%', textAlign: 'center' }}>รายการ</Text>
@@ -271,7 +332,6 @@ export class LocalCalendarScreen extends Component {
 
                         </>
                     }
-
                     {this.state.selected === 3 &&
                         < >
                             <Item fixedLabel >
@@ -309,9 +369,6 @@ export class LocalCalendarScreen extends Component {
 
                                 </Picker>
                             </Item>
-
-
-
                             <View style={{ flexDirection: 'row', justifyContent: 'center', flex: 1 }}>
                                 <Button success style={{ margin: 10 }} onPress={this.onSubmit.bind(this)}>
                                     <Icon name='save' type="AntDesign" />
@@ -320,28 +377,32 @@ export class LocalCalendarScreen extends Component {
                                     <Icon name='left' type="AntDesign" />
                                     <Text>กลับ</Text></Button>
                             </View>
-
                         </>
-
-
                     }
                 </Content>
                 <Footer>
                     <FooterTab style={styles.footer}>
                         <TouchableOpacity onPress={() => this.setState({ selected: 1 })}>
                             <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
-                                , this.state.selected === 1 && { backgroundColor: themeStyle.Color_green }]}>ปฏิทิน</Text>
+                                , this.state.selected === 1 && { backgroundColor: themeStyle.Color_green }]}>หมู่บ้าน</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
-                            <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
-                                , this.state.selected === 3 && { backgroundColor: themeStyle.Color_green }]}>เพิ่มข้อมูล</Text>
-                        </TouchableOpacity>
+                        {!isEmptyValue(selected_ban.Name) &&
+                            <>
+                                <TouchableOpacity onPress={() => this.setState({ selected: 2 })}>
+                                    <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                        , this.state.selected === 2 && { backgroundColor: themeStyle.Color_green }]}>ปฏิทิน</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={() => this.setState({ selected: 3 })}>
+                                    <Text style={[{ textAlign: 'center', padding: 5, borderRadius: 10 }
+                                        , this.state.selected === 3 && { backgroundColor: themeStyle.Color_green }]}>เพิ่มข้อมูล</Text>
+                                </TouchableOpacity>
+                            </>
+                        }
+
                     </FooterTab>
                 </Footer>
             </Container>
         )
-
-
     }
 
 }

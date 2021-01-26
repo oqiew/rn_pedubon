@@ -30,6 +30,7 @@ import PersonHistoryScreen from './screens/PersonHistoryScreen';
 import PersonsScreen from './screens/PersonsScreen';
 import NewProfileScreen from './screens/profile/NewProfileScreen';
 import { routeName } from './routes/RouteConstant'
+import AddBanScreen from './screens/AddBanScreen';
 const Stack = createStackNavigator();
 
 function App() {
@@ -109,6 +110,11 @@ function App() {
                     name={routeName.PersonHistory}
                     component={PersonHistoryScreen}
                     options={{ title: 'ประวัติบุคคลที่น่าสนใจ', headerShown: false }}
+                />
+                <Stack.Screen
+                    name={routeName.AddBan}
+                    component={AddBanScreen}
+                    options={{ title: 'เพิ่มหมู่บ้าน', headerShown: false }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

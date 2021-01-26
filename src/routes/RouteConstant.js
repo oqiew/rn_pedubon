@@ -13,4 +13,5 @@ export const routeName = {
     LocalHistory: 'LocalHistory',
     Persons: 'Persons',
     PersonHistory: 'PersonHistory',
+    AddBan: 'AddBan'
 }

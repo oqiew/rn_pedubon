@@ -4,6 +4,7 @@ export const TableName = {
     Social_maps: 'Social_maps',//เก็บข้อมูล แผนที่ข้อมูล
     Local_calendars: 'Local_calendars',//เก็บข้อมูล ปฏิทินชุมชน
     Local_historys: 'Local_historys',//เก็บข้อมูล ประวัติศาสตตร์ชุมชน
-    Person_historys: 'Historys',//เก็บข้อมูล ประวัติศาสตตร์ชุมชน
+    Person_historys: 'Historys',//เก็บข้อมูล ประวัติศาสตตร์ชุมชน,
+    Bans: 'Bans'
 
 }

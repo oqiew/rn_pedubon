@@ -51,8 +51,10 @@ export class ProfileScreen extends Component {
             Name, Last_name, Nickname, Sex, Phone_number, Line_ID,
             Facebook, Position, Birthday,
             Avatar_URL, User_type, } = this.state;
-        var bd = Birthday.split("-");
-        const birthday = Birthday + "(" + (parseInt(bd[2], 10) + 543) + ")";
+        // var bd = Birthday.split("-");
+        console.log(Birthday.seconds * 1000)
+        const showBirthday = '';
+        // Birthday + "(" + (parseInt(bd[2], 10) + 543) + ")";
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
                 <PDHeader name={'โปรไฟล์'} backHandler={this.onBack}></PDHeader>
@@ -90,7 +92,7 @@ export class ProfileScreen extends Component {
                             <View style={{ flexDirection: 'row' }}>
                                 <Text style={{ width: 100, fontWeight: 'bold', fontSize: 16, marginRight: 5 }}>
                                     วันเกิด :</Text>
-                                <Text style={{ fontSize: 16 }}>{birthday}</Text>
+                                <Text style={{ fontSize: 16 }}>{showBirthday}</Text>
                             </View>
                             <View style={{ flexDirection: 'row' }}>
                                 <Text style={{ width: 100, fontWeight: 'bold', fontSize: 16, marginRight: 5 }}>

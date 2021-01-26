@@ -32,7 +32,8 @@ export class ProfileEditScreen extends Component {
             loading: false,
             newAvatarUpload: false,
             avatar_uri: ''
-        }; console.log(this.state)
+        }; 
+        // console.log(this.state)
     }
     uploadImage() {
         console.log("upload image")
@@ -106,8 +107,9 @@ export class ProfileEditScreen extends Component {
             console.log('update data')
             try {
                 this.tbUser.doc(uid).update({
-                    Name, Lastname, Nickname, Sex, Phone_number, User_type,
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
                     Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
+                    Update_date: firestore.Timestamp.now()
                 }).then((success) => {
                     Alert.alert("บันทึกข้อมูลสำเร็จ")
                     this.props.fetch_user({

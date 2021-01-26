@@ -18,6 +18,8 @@ class HomeScreen extends Component {
     constructor(props) {
         super(props);
         this.tbUsers = firestore().collection(TableName.Users);
+        this.tbAreas = firestore().collection(TableName.Areas);
+        this._unsubscribe = null;
         this.state = {
             loading: false,
             //user login
@@ -34,20 +36,45 @@ class HomeScreen extends Component {
     }
 
     componentDidMount() {
-        this.onStart(this);
+        this._unsubscribe = this.props.navigation.addListener('focus', () => {
+            // do something
+            this.onStart(this);
+        });
+
+    }
+    componentWillUnmount() {
+        this._unsubscribe();
     }
     UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({
             ...nextProps.fetchReducer.user
         })
     }
-
+    setArea = async (Area_ID) => {
+        return new Promise((resolve, reject) => {
+            this.tbAreas.doc(Area_ID).get().then((doc) => {
+                if (doc.exists) {
+                    resolve({ name: doc.data().Dominance + " " + doc.data().Area_name, type: doc.data().Area_type })
+                } else {
+                    reject('')
+                }
+            })
+        })
+    }
     setProfile = (uid, email) => {
-        this.tbUsers.doc(uid).get().then(doc => {
+        this.tbUsers.doc(uid).get().then(async (doc) => {
+
             if (doc.exists) {
+                const temp_bd = new Date(doc.data().Birthday.seconds * 1000);
+                const area = await this.setArea(doc.data().Area_ID)
+
                 this.props.fetch_user({
-                    uid, email,
                     ...doc.data(),
+                    uid, email,
+                    bd: temp_bd.getDate() + "/" + (parseInt(temp_bd.getMonth(), 10) + 1) + "/" + temp_bd.getFullYear(),
+                    area_name: area.name,
+                    area_type: area.type
+
                 });
                 this.props.navigation.navigate(routeName.Main);
                 // console.log('Main');
@@ -68,7 +95,7 @@ class HomeScreen extends Component {
 
             }
         }).catch(error => {
-
+            console.log('error', error)
             this.props.fetch_user({ uid, email });
             this.setState({
                 loading: false,
@@ -128,19 +155,6 @@ class HomeScreen extends Component {
                 });
             }
         })
-    }
-    onResetPassword = (e) => {
-        e.preventDefault();
-        auth().sendPasswordResetEmail(this.state.Email)
-            .then((doc) => {
-                this.setState({
-                    step: 1,
-                })
-                Alert.alert("กรุณาเช็คอีเมลของท่าน");
-            })
-            .catch(error => {
-                Alert.alert("ตั้งรหัสผ่านใหม่ไม่สำเร็จ กรุณากรอกข้อมูลอีเมลให้ถูกต้อง");
-            });
     }
     onRegister() {
         console.log("create email")

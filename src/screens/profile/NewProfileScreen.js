@@ -44,7 +44,6 @@ export class NewProfileScreen extends Component {
             Facebook: '',
             Birthday: '',
             Position: '',
-            Department: '',
             avatar_uri: '',
             Avatar_URL: '',
             Role: '',
@@ -175,8 +174,8 @@ export class NewProfileScreen extends Component {
             } else {
                 console.log("start add")
                 this.tbUser.doc(uid).set({
-                    Name, Lastname, Nickname, Sex, Phone_number, User_type,
-                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL,
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
+                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL, Create_date: firestore.Timestamp.now()
                 }).then((success) => {
                     Alert.alert("บันทึกข้อมูลสำเร็จ")
                     this.props.fetch_user({

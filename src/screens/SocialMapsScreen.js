@@ -17,7 +17,7 @@ import {
     Container, Content, Footer, Radio, Icon, Item, Textarea, Label, Input, Picker, Button, Text, ListItem, Left, Right,
 } from 'native-base';
 import Firebase from '../Firebase';
-import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
+import MapView, { PROVIDER_GOOGLE, Marker, Callout } from 'react-native-maps';
 import ImagePicker from 'react-native-image-picker'
 import ImageResizer from 'react-native-image-resizer'
 import Geolocation from '@react-native-community/geolocation';
@@ -53,7 +53,7 @@ export class Main extends Component {
             Geo_map_time: '',
             Geo_map_description: '',
             Geo_map_result_description: '',
-            Informer_ID: '',
+            Create_By_ID: '',
             Create_date: '',
             Map_image_URL: '',
             Map_image_name: '',
@@ -62,6 +62,7 @@ export class Main extends Component {
             new_upload_image: false,
             map_image_file_name: '',
             uploaded: false,
+            marker: '',
             //select data
             //input data profile
             ...this.props.fetchReducer.user,
@@ -139,27 +140,7 @@ export class Main extends Component {
     };
 
 
-    onMarkerClicked(t, map, coord) {
-        try {
-            const { latLng } = coord;
-            const lat = latLng.lat();
-            const lng = latLng.lng();
-            if (this.state.showingInfoWindow) {
-                this.setState({
-                    showingInfoWindow: false,
-                    activeMarker: null
-                })
-            }
-            setTimeout(() => {
-                this.setState({
-                    position: { lat, lng }
-                }, 100)
-            })
-        } catch (e) {
 
-        }
-
-    }
 
     ListMark = querySnapshot => {
 
@@ -227,62 +208,51 @@ export class Main extends Component {
             if (add) {
                 if (Geo_map_type === 'home') {
                     name_type = 'บ้าน';
+                    icon_m = require('../assets/home.png');
                 } else if (Geo_map_type === 'resource') {
                     name_type = 'แหล่งทรัพยากร';
+                    icon_m = require('../assets/resource.png');
                 } else if (Geo_map_type === 'organization') {
                     name_type = 'องค์กร';
+                    icon_m = require('../assets/organization.png');
                 } else if (Geo_map_type === 'flag_good') {
                     name_type = 'จุดดี';
+                    icon_m = require('../assets/flag_good.png');
                 } else if (Geo_map_type === 'flag_danger') {
                     name_type = 'จุดเสี่ยง';
+                    icon_m = require('../assets/flag_danger.png');
                 } else if (Geo_map_type === 'accident') {
                     name_type = 'จุดอุบัติเหตุ';
+                    icon_m = require('../assets/accident.png');
                 }
                 if (!isEmptyValue(Geo_map_position)) {
                     listshowMarker.push(
                         <Marker
-                            onPress={this.onMarkerClicked}
                             key={count}
-                            title={Geo_map_name + ''}
+                            // title={Geo_map_name + ''}
                             coordinate={{
                                 latitude: Geo_map_position.lat,
                                 longitude: Geo_map_position.lng,
                             }}
-                            description={Geo_map_description}
-                        // image={Map_image_URL}
-                        // icon={icon_m}
+                            // description={Geo_map_description}
+                            // image={icon_m}
+                            icon={icon_m}
                         // label={count}
                         >
-                            <View>
-                                {Geo_map_type === 'home' ? (
-                                    <Image
-                                        source={require('../assets/home.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : Geo_map_type === 'resource' ? (
-                                    <Image
-                                        source={require('../assets/resource.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : Geo_map_type === 'organization' ? (
-                                    <Image
-                                        source={require('../assets/organization.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : Geo_map_type === 'flag_good' ? (
-                                    <Image
-                                        source={require('../assets/flag_good.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : Geo_map_type === 'flag_danger' ? (
-                                    <Image
-                                        source={require('../assets/flag_danger.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : Geo_map_type === 'accident' ? (
-                                    <Image
-                                        source={require('../assets/accident.png')}
-                                        style={{ height: 35, width: 35 }}></Image>
-                                ) : (
-                                                            <View></View>
-                                                        )}
-                            </View>
-                        </Marker>,
+                            <Callout tooltip>
+                                <View>
+                                    <View style={_stylesMap.bubble}>
+                                        <Text style={_stylesMap.name}>{Geo_map_name}</Text>
+                                        <Text style={{ fontSize: 14, color: '#6a6a6a' }}>{Geo_map_description}</Text>
+                                        {/* <Image style={_stylesMap.image} source={require('../assets/home.png')}
+                                            resizeMode='cover'>
+                                        </Image> */}
+                                    </View>
+                                    <View style={_stylesMap.arrowBorder}></View>
+                                    <View style={_stylesMap.arrow}></View>
+                                </View>
+                            </Callout>
+                        </Marker >,
                     );
                     geoMaps.push({
                         Key: doc.id,
@@ -391,7 +361,7 @@ export class Main extends Component {
             loading: true,
         });
         const { position, Map_image_URL, Geo_map_name, Geo_map_type, Important,
-            Geo_map_description, Area_ID, Area_PID, Area_DID, Area_SDID, Geo_map_time,
+            Geo_map_description, Area_ID, Geo_map_time,
             Geo_map_result_description, Map_image_name } = this.state;
 
         let temp_Map_image_URL = '';
@@ -430,7 +400,7 @@ export class Main extends Component {
                             Geo_map_time,
                             Important,
                             Geo_map_result_description,
-                            Informer_ID: this.state.uid,
+                            Create_By_ID: this.state.uid,
                             Area_ID,
                         })
                         .then(result => {
@@ -475,7 +445,7 @@ export class Main extends Component {
                                 Geo_map_time,
                                 Important,
                                 Geo_map_result_description,
-                                Informer_ID: this.state.uid,
+                                Create_By_ID: this.state.uid,
                                 Area_ID,
                             })
                             .then(result => {
@@ -544,7 +514,7 @@ export class Main extends Component {
     }
     delete(data) {
 
-        if (this.state.uid === data.Informer_ID || this.state.Role === 'admin') {
+        if (this.state.uid === data.Create_By_ID || this.state.Role === 'admin') {
             if (isEmptyValue(data.Map_image_URL) === false) {
                 var desertRef = Storage().refFromURL(
                     data.Map_image_URL,
@@ -568,7 +538,7 @@ export class Main extends Component {
                     Geo_map_name: '',
                     Geo_map_type: '',
                     Geo_map_description: '',
-                    Informer_ID: '',
+                    Create_By_ID: '',
                     Create_date: '',
                     Map_image_URL: '',
                     Map_image_uri: '',
@@ -612,7 +582,7 @@ export class Main extends Component {
 
         return (
             <Container >
-                <PDHeader name={'เพิ่มข้อมูลชุมชน'} backHandler={this.onBack}></PDHeader>
+                <PDHeader name={'เพิ่มข้อมูลชุมชน' + this.state.area_name} backHandler={this.onBack}></PDHeader>
                 <Loading visible={this.state.loading}></Loading>
                 {/* main show */}
                 {Selected === 1 ? (
@@ -886,10 +856,18 @@ export class Main extends Component {
                                         coordinate={{
                                             latitude: this.state.position.lat,
                                             longitude: this.state.position.lng,
-                                        }}></Marker>
+                                        }}>
+
+
+                                    </Marker>
 
 
                                     {this.state.listshowMarker}
+                                    {!isEmptyValue(this.state.marker) &&
+                                        <View style={_stylesMap.card}>
+                                            <Text></Text>
+                                        </View>
+                                    }
                                 </MapView>
 
                             )
@@ -956,5 +934,42 @@ const mapStateToProps = state => ({
 const mapDispatchToProps = {
     fetch_user,
 };
-
+const _stylesMap = StyleSheet.create({
+    bubble: {
+        flexDirection: 'column',
+        alignSelf: 'flex-start',
+        backgroundColor: '#fff',
+        borderRadius: 6,
+        borderColor: '#ccc',
+        borderWidth: 0.5,
+        alignSelf: 'center',
+        width: 150,
+        padding: 15
+    },
+    arrow: {
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderTopColor: '#fff',
+        borderWidth: 16,
+        alignSelf: 'center',
+        marginTop: -32
+    },
+    arrowBorder: {
+        backgroundColor: 'transparent',
+        borderColor: 'transparent',
+        borderTopColor: '#007a87',
+        borderWidth: 16,
+        alignSelf: 'center',
+        marginTop: -0.5
+    },
+    name: {
+        fontSize: 16,
+        marginBottom: 5
+    },
+    image: {
+        width: 120,
+        height: 80,
+        flex: 1
+    }
+})
 export default connect(mapStateToProps, mapDispatchToProps)(Main);
