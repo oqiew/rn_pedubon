@@ -243,10 +243,14 @@ export class Main extends Component {
                                 <View>
                                     <View style={_stylesMap.bubble}>
                                         <Text style={_stylesMap.name}>{Geo_map_name}</Text>
-                                        <Text style={{ fontSize: 14, color: '#6a6a6a' }}>{Geo_map_description}</Text>
-                                        {/* <Image style={_stylesMap.image} source={require('../assets/home.png')}
-                                            resizeMode='cover'>
-                                        </Image> */}
+                                        <Text style={{ fontSize: 12, color: '#6a6a6a', flexWrap: 'wrap' }}>{Geo_map_description}</Text>
+                                        <Text style={{ position: "relative", bottom: 40, width: 100, height: 100, }}>
+                                            <Image style={{
+                                                width: 100, height: 100,
+                                            }} source={{ uri: Map_image_URL }} resizeMode="cover" >
+                                            </Image>
+                                        </Text>
+
                                     </View>
                                     <View style={_stylesMap.arrowBorder}></View>
                                     <View style={_stylesMap.arrow}></View>
@@ -254,6 +258,7 @@ export class Main extends Component {
                             </Callout>
                         </Marker >,
                     );
+                    console.log(Map_image_URL)
                     geoMaps.push({
                         Key: doc.id,
                         Geo_map_name,
@@ -582,7 +587,7 @@ export class Main extends Component {
 
         return (
             <Container >
-                <PDHeader name={'เพิ่มข้อมูลชุมชน' + this.state.area_name} backHandler={this.onBack}></PDHeader>
+                <PDHeader name={'เพิ่มข้อมูลชุมชน'} backHandler={this.onBack}></PDHeader>
                 <Loading visible={this.state.loading}></Loading>
                 {/* main show */}
                 {Selected === 1 ? (
@@ -943,8 +948,8 @@ const _stylesMap = StyleSheet.create({
         borderColor: '#ccc',
         borderWidth: 0.5,
         alignSelf: 'center',
-        width: 150,
-        padding: 15
+        width: 110,
+        padding: 5
     },
     arrow: {
         backgroundColor: 'transparent',
@@ -967,9 +972,8 @@ const _stylesMap = StyleSheet.create({
         marginBottom: 5
     },
     image: {
-        width: 120,
-        height: 80,
-        flex: 1
+        width: 100,
+        height: 100,
     }
 })
 export default connect(mapStateToProps, mapDispatchToProps)(Main);
