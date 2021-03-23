@@ -94,8 +94,8 @@ export class Main extends Component {
         };
     }
     componentDidMount() {
-        this.tbSocialMaps.where('Area_ID', '==', this.state.Area_ID)
-            .onSnapshot(this.ListMark);
+        this.tbSocialMaps.where('Area_ID', '==', this.state.Area.ID)
+            .onSnapshot(this.LitsMark);
     }
     UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({
@@ -854,8 +854,6 @@ export class Main extends Component {
                                     zoomTapEnabled={true}
                                     zoomControlEnabled={true}
                                     {...this.getgeolocation}
-
-
                                 >
                                     <Marker
                                         coordinate={{

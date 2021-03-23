@@ -32,7 +32,7 @@ export class ProfileEditScreen extends Component {
             loading: false,
             newAvatarUpload: false,
             avatar_uri: ''
-        }; 
+        };
         // console.log(this.state)
     }
     uploadImage() {
@@ -86,11 +86,12 @@ export class ProfileEditScreen extends Component {
         })
     }
     _onSave = async () => {
+
         this.setState({
             loading: true
         })
         const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
-            Line_ID, Facebook, Birthday, Position, Area_ID, newAvatarUpload, Avatar_URL } = this.state;
+            Line_ID, Facebook, Birthday_format, Position, Area_ID, newAvatarUpload, Avatar_URL } = this.state;
         var temp_Avatar_URL = "";
         if (newAvatarUpload) {
             temp_Avatar_URL = await this.uploadImage();
@@ -106,15 +107,17 @@ export class ProfileEditScreen extends Component {
         } else {
             console.log('update data')
             try {
+                const Birthday_array = Birthday_format.split('-');
+                const Birthday = new Date(Birthday_array[2], (parseInt(Birthday_array[1], 10) - 1), Birthday_array[0]);
                 this.tbUser.doc(uid).update({
-                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email, Birthday_format,
                     Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
                     Update_date: firestore.Timestamp.now()
                 }).then((success) => {
                     Alert.alert("บันทึกข้อมูลสำเร็จ")
                     this.props.fetch_user({
                         uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
-                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL,
+                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL: temp_Avatar_URL, Birthday_format,
                     });
                     this.setState({
                         loading: false
@@ -141,7 +144,7 @@ export class ProfileEditScreen extends Component {
     render() {
         const { avatar_uri, Avatar_URL } = this.state;
         const { Name, Lastname, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position,
+            Line_ID, Facebook, Birthday_format, Position,
         } = this.state;
 
         return (
@@ -205,7 +208,7 @@ export class ProfileEditScreen extends Component {
                             <Label>วันเกิด<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                             <DatePicker
                                 style={{ width: 200 }}
-                                date={Birthday}
+                                date={Birthday_format}
                                 mode="date"
                                 placeholder="เลือกวันเกิด(ค.ศ.)"
                                 format="DD-MM-YYYY"
@@ -228,7 +231,7 @@ export class ProfileEditScreen extends Component {
                                         color: '#5c5c5c',
                                     },
                                 }}
-                                onDateChange={(date) => { this.setState({ Birthday: date }) }}
+                                onDateChange={(date) => { this.setState({ Birthday_format: date }) }}
                             />
 
                         </Item>

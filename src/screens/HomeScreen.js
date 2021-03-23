@@ -43,7 +43,7 @@ class HomeScreen extends Component {
 
     }
     componentWillUnmount() {
-        this._unsubscribe();
+        this._unsubscribe = null;
     }
     UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({

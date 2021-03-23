@@ -35,8 +35,8 @@ export class MainScreen extends Component {
                 <Content contentContainerStyle={{ padding: 15 }}>
                     <Text style={{ textAlign: 'center', fontSize: 24 }}>
                         {this.state.area_name}</Text>
-                    <Text style={{ textAlign: 'center', fontSize: 24 }}>
-                        ({this.state.area_type})</Text>
+                    <Text style={{ textAlign: 'center', fontSize: 24, color: '#01aeae' }}>
+                        {this.state.area_type}</Text>
                     <Grid>
                         <Col style={{ height: 200, padding: 10 }}>
                             <TouchableOpacity

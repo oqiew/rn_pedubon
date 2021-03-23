@@ -43,6 +43,7 @@ export class NewProfileScreen extends Component {
             Line_ID: '',
             Facebook: '',
             Birthday: '',
+            Birthday_format: '',
             Position: '',
             avatar_uri: '',
             Avatar_URL: '',
@@ -136,8 +137,8 @@ export class NewProfileScreen extends Component {
                 Alert.alert("กรุณาเลือกประเภท")
             }
         } else if (this.state.step === 3) {
-            const { Name, Lastname, Nickname, Sex, Birthday } = this.state;
-            if (isEmptyValues([Name, Lastname, Nickname, Sex, Birthday]) === false) {
+            const { Name, Lastname, Nickname, Sex, Birthday_format } = this.state;
+            if (isEmptyValues([Name, Lastname, Nickname, Sex, Birthday_format]) === false) {
                 this.setState({
                     step: this.state.step + 1
                 })
@@ -156,7 +157,7 @@ export class NewProfileScreen extends Component {
             loading: true
         })
         const { uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
-            Line_ID, Facebook, Birthday, Position, Area_ID, } = this.state;
+            Line_ID, Facebook, Birthday_format, Position, Area_ID, } = this.state;
 
         if (isEmptyValue(Area_ID)) {
             Alert.alert("กรุณาเลือกพื้นที่")
@@ -173,14 +174,16 @@ export class NewProfileScreen extends Component {
                 })
             } else {
                 console.log("start add")
+                const Birthday_array = Birthday_format.split('-');
+                const Birthday = new Date(Birthday_array[2], (parseInt(Birthday_array[1], 10) - 1), Birthday_array[0]);
                 this.tbUser.doc(uid).set({
-                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email,
-                    Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL, Create_date: firestore.Timestamp.now()
+                    Name, Lastname, Nickname, Sex, Phone_number, User_type, Email: email, Birthday,
+                    Line_ID, Facebook, Birthday_format, Position, Area_ID, Avatar_URL, Create_date: firestore.Timestamp.now()
                 }).then((success) => {
                     Alert.alert("บันทึกข้อมูลสำเร็จ")
                     this.props.fetch_user({
                         uid, email, avatar_uri, Name, Lastname, Nickname, Sex, Phone_number, User_type,
-                        Line_ID, Facebook, Birthday, Position, Area_ID, Avatar_URL,
+                        Line_ID, Facebook, Birthday_format, Position, Area_ID, Avatar_URL, Birthday,
                     });
                     this.setState({
                         loading: false
@@ -203,6 +206,7 @@ export class NewProfileScreen extends Component {
             return [];
         }
         const { query_areas } = this.state;
+
         const regex = new RegExp(`${dominance.trim()}`, 'i');
         const areas = query_areas.filter(area => area.Dominance.search(regex) >= 0)
         this.setState({
@@ -213,7 +217,7 @@ export class NewProfileScreen extends Component {
     onAreaSearch = (area) => {
         const { query_areas } = this.state;
         const regex = new RegExp(`${area.trim()}`, 'i');
-        const areas = query_areas.filter(area => area.AreaName.search(regex) >= 0)
+        const areas = query_areas.filter(area => area.Area_name.search(regex) >= 0)
         this.setState({
             areas,
             area
@@ -221,7 +225,7 @@ export class NewProfileScreen extends Component {
     }
     onSelectArea = (data) => {
         this.setState({
-            area: data.AreaName,
+            area: data.Area_name,
             Area_ID: data.areaID
         })
     }
@@ -229,7 +233,7 @@ export class NewProfileScreen extends Component {
         const { Avatar_URL, avatar_uri } = this.state;
         const { step } = this.state;
         const { Name, Lastname, Nickname, Sex, Phone_number,
-            Line_ID, Facebook, Birthday, Position,
+            Line_ID, Facebook, Birthday_format, Position,
         } = this.state;
         const { areas, area, dominance } = this.state;
         return (
@@ -304,7 +308,7 @@ export class NewProfileScreen extends Component {
                                         <Label>วันเกิด<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <DatePicker
                                             style={{ width: 200 }}
-                                            date={Birthday}
+                                            date={Birthday_format}
                                             mode="date"
                                             placeholder="เลือกวันเกิด(ค.ศ.)"
                                             format="DD-MM-YYYY"
@@ -327,7 +331,8 @@ export class NewProfileScreen extends Component {
                                                     color: '#5c5c5c',
                                                 },
                                             }}
-                                            onDateChange={(date) => { this.setState({ Birthday: date }) }}
+                                            onDateChange={(date) => { this.setState({ Birthday_format: date }) }}
+                                        // onDateChange={(date) => { console.log(new Date(date)) }}
                                         />
 
                                     </Item>
@@ -388,7 +393,7 @@ export class NewProfileScreen extends Component {
                                                     <TouchableOpacity key={i}
                                                         onPress={this.onSelectArea.bind(this, element)}
                                                         style={{ margin: 5, width: '100%', flexDirection: 'row', justifyContent: 'space-around' }}>
-                                                        <Text style={{ fontSize: 18 }}>{element.AreaName}</Text>
+                                                        <Text style={{ fontSize: 18 }}>{element.Area_name}</Text>
                                                         <Text style={{ color: themeStyle.Color_green, marginLeft: 5 }}>เลือก</Text>
                                                     </TouchableOpacity>
                                                 )}
