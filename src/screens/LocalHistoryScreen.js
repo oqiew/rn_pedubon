@@ -10,7 +10,7 @@ import { connect } from 'react-redux';
 import { Container, Content, FooterTab, Footer, Item, Label, Input, Textarea, Form, Text, Button, Icon } from 'native-base';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import Loading from '../components/Loading';
 import themeStyle from '../styles/theme.style';
@@ -146,7 +146,7 @@ export class LocalHistoryScreen extends Component {
     compareBy(key) {
         return function (a, b) {
             if (a[key] < b[key]) return -1;
-            if (a[key] > b[key])  return 1;
+            if (a[key] > b[key]) return 1;
             return 0;
         };
     }
@@ -258,7 +258,8 @@ export class LocalHistoryScreen extends Component {
         const { Name_activity, Description, Year_start, dataTimeline, ban, bans, selected_ban } = this.state;
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
-                <PDHeader name={"ประวัติศาสตตร์ชุมชน" + selected_ban.Name} backHandler={this.onBack}></PDHeader>
+                {isEmptyValue(selected_ban) ? <PDHeader name={'ประวัติศาสตตร์ชุมชน'} backHandler={this.onBack}></PDHeader>
+                    : <PDHeader name={'ประวัติศาสตตร์ชุมชน' + selected_ban.Name} backHandler={() => this.setState({ selected_ban: '', selected: 1 })}></PDHeader>}
                 <Loading visible={this.state.loading}></Loading>
                 {this.state.selected === 1 &&
                     <Content contentContainerStyle={{ padding: 15 }}>
@@ -331,18 +332,18 @@ export class LocalHistoryScreen extends Component {
                     <Content contentContainerStyle={{ padding: 15 }}>
                         <Item fixedLabel >
                             <Label>ชื่อเหตุการณ์ :</Label>
-                            <Input value={Name_activity}
+                            <Input value={Name_activity} style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                 onChangeText={str => this.setState({ Name_activity: str })} placeholder="ชื่อหัวข้อ เหตุการณ์ หรือกิจกรรม" />
                         </Item>
                         <Item stackedLabel >
                             <Label>คำอธิบาย :</Label>
-                            <Textarea rowSpan={4} value={Description} style={{ fontSize: 16 }}
+                            <Textarea rowSpan={4} value={Description} style={{ backgroundColor: "#ffffff", borderRadius: 5, fontSize: 16, minWidth: '100%', maxWidth: '100%' }}
                                 onChangeText={str => this.setState({ Description: str })} placeholder="คำอธิบาย เหตุการณ์ หรือกิจกรรมที่เกิดขึ้นกับชุมชน" />
                         </Item>
                         <Item fixedLabel >
                             <Label>ปีที่เริ่ม :</Label>
                             <Input value={Year_start} maxLength={4}
-                                keyboardType={"number-pad"}
+                                keyboardType={"number-pad"} style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                 onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
                         </Item>
                         <View style={{ flex: 1, justifyContent: 'center', flexDirection: 'row' }}>

@@ -25,10 +25,11 @@ import { isEmptyValue, GetCurrentDate } from '../components/Methods';
 import Loading from '../components/Loading';
 import firestore from '@react-native-firebase/firestore';
 import Storage from '@react-native-firebase/storage';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import PDHeader from '../components/header';
 import themeStyle from '../styles/theme.style';
 import { routeName } from '../routes/RouteConstant';
+import mainStyles from '../styles/main.styles';
 
 export class Main extends Component {
     constructor(props) {
@@ -94,8 +95,8 @@ export class Main extends Component {
         };
     }
     componentDidMount() {
-        this.tbSocialMaps.where('Area_ID', '==', this.state.Area.ID)
-            .onSnapshot(this.LitsMark);
+        this.tbSocialMaps.where('Area_ID', '==', this.state.Area_ID)
+            .onSnapshot(this.ListMark);
     }
     UNSAFE_componentWillReceiveProps(nextProps) {
         this.setState({
@@ -235,7 +236,7 @@ export class Main extends Component {
                                 longitude: Geo_map_position.lng,
                             }}
                             // description={Geo_map_description}
-                            // image={icon_m}
+                            image={icon_m}
                             icon={icon_m}
                         // label={count}
                         >
@@ -409,7 +410,7 @@ export class Main extends Component {
                             Area_ID,
                         })
                         .then(result => {
-                            alert('อัพเดตสำเร็จ');
+                            Alert.alert('อัพเดตสำเร็จ');
                             this.setState({
                                 Geo_map_name: '',
                                 Geo_map_type: '',
@@ -454,7 +455,7 @@ export class Main extends Component {
                                 Area_ID,
                             })
                             .then(result => {
-                                alert('บันทึกสำเร็จ');
+                                Alert.alert('บันทึกสำเร็จ');
                                 this.setState({
                                     Geo_map_name: '',
                                     Geo_map_type: '',
@@ -488,13 +489,13 @@ export class Main extends Component {
                 this.setState({
                     loading: false,
                 });
-                alert('กรุณากรอกข้อมูลให้ครบ');
+                Alert.alert('กรุณากรอกข้อมูลให้ครบ');
             }
         } else {
             this.setState({
                 loading: false,
             });
-            alert('กรุณาอัพโหลดรูปภาพ');
+            Alert.alert('กรุณาอัพโหลดรูปภาพ');
         }
     }
 
@@ -561,7 +562,7 @@ export class Main extends Component {
 
         } else {
             console.log('can not delete');
-            alert('คุณไม่มีสิทธิ์ลบข้อมูลนี้');
+            Alert.alert('คุณไม่มีสิทธิ์ลบข้อมูลนี้');
         }
 
     }
@@ -592,8 +593,8 @@ export class Main extends Component {
                 {/* main show */}
                 {Selected === 1 ? (
                     this.state.maptable ? (
-                        <Content contentContainerStyle={{ padding: 15 }}>
-                            <View style={{ flex: 1, alignItems: 'center', margin: 10 }}>
+                        <Content contentContainerStyle={mainStyles.background}>
+                            <View style={{ flex: 1, alignItems: 'center', }}>
                                 <Text
                                     style={{
                                         fontWeight: 'bold',
@@ -604,47 +605,23 @@ export class Main extends Component {
                                     ตารางข้อมูล</Text>
                                 <View
                                     style={{
-                                        flex: 1,
                                         flexDirection: 'row',
                                         borderBottomWidth: 1,
-                                        marginBottom: 5,
                                     }}>
-                                    <Text
-                                        style={{
-                                            fontWeight: 'bold',
-                                            margin: 10,
-                                            width: '20%',
-                                            textAlign: 'center',
-                                        }}>
-                                        ชื่อพื้นที่</Text>
-                                    <Text
-                                        style={{
-                                            fontWeight: 'bold',
-                                            margin: 10,
-                                            width: '20%',
-                                            textAlign: 'center',
-                                        }}>
-                                        ลักษณะพื้นที่</Text>
-                                    <Text
-                                        style={{
-                                            fontWeight: 'bold',
-                                            margin: 10,
-                                            width: '20%',
-                                            textAlign: 'center',
-                                        }}>
-                                        ผู้เพิ่มข้อมูล</Text>
-                                    <Text
-                                        style={{
-                                            fontWeight: 'bold',
-                                            margin: 10,
-                                            width: '20%',
-                                            textAlign: 'center',
-                                        }}>
-                                        แก้ไข</Text>
                                 </View>
                                 <ScrollView>
                                     {this.state.geoMaps.map((element, i) => (
-                                        <View key={i} style={{ flex: 1, flexDirection: 'row' }}>
+                                        <View key={i} style={{
+                                            flex: 1,
+                                            flexDirection: 'row',
+                                            backgroundColor: '#d9d9ff',
+                                            justifyContent: 'space-around',
+                                            alignItems: "center",
+                                            padding: 5,
+                                            borderRadius: 10,
+                                            margin: 2,
+                                            height: 100
+                                        }}>
                                             <Text
                                                 style={{
                                                     margin: 10,
@@ -689,7 +666,7 @@ export class Main extends Component {
                             </View>
                         </Content>
                     ) : this.state.mapAddData ? (
-                        <Content contentContainerStyle={{ padding: 15 }}>
+                        <Content contentContainerStyle={mainStyles.background}>
                             <View style={{ flex: 1, alignItems: 'center', marginBottom: 20 }}>
                                 <Text style={styles.title}>เพิ่มข้อมูล</Text>
                                 <View style={{ flexDirection: 'row' }}>
@@ -712,10 +689,12 @@ export class Main extends Component {
                                 <Item fixedLabel>
                                     <Label>ประเภท<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                     <Picker
+                                        mode="dropdown"
+                                        placeholder="เลือกประเภท"
+                                        iosIcon={<Icon name="down" type="AntDesign"></Icon>}
                                         style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
                                         selectedValue={Geo_map_type}
                                         onValueChange={str => this.setState({ Geo_map_type: str })}>
-                                        <Picker.Item key="0" label="เลือกประเภท" value="" />
                                         <Picker.Item key="1" value="home" label="บ้าน" />
                                         <Picker.Item
                                             key="2"
@@ -737,12 +716,20 @@ export class Main extends Component {
                                     </Picker>
                                 </Item>
                                 {Geo_map_type === 'home' &&
-                                    <Item fixedLabel>
+                                    <Item fixedLabel style={{ height: 50 }}>
                                         <Label>เพิ่มประวัติบุคคล :</Label>
-                                        <Radio selected={!Important} onPress={() => this.setState({ Important: false })}></Radio>
-                                        <Text>ไม่เพิ่ม</Text>
-                                        <Radio selected={Important} onPress={() => this.setState({ Important: true })}></Radio>
-                                        <Text>เพิ่ม</Text>
+                                        <View style={{ justifyContent: 'space-around', flexDirection: 'row', width: 200 }}>
+                                            <TouchableOpacity style={{ flexDirection: 'row' }} onPress={() => this.setState({ Important: false })}>
+                                                <Radio selected={!Important} ></Radio>
+                                                <Text>ไม่เพิ่ม</Text>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity style={{ flexDirection: 'row' }} onPress={() => this.setState({ Important: true })}>
+                                                <Radio selected={Important} ></Radio>
+                                                <Text>เพิ่ม</Text>
+                                            </TouchableOpacity>
+
+                                        </View>
+
                                     </Item>
 
                                 }
@@ -764,7 +751,7 @@ export class Main extends Component {
                                     <Item stackedLabel>
                                         <Label>ลักษณะกิจกรรม<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <Textarea
-                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5, minWidth: '100%', maxWidth: '100%' }}
                                             rowSpan={4}
                                             value={Geo_map_description}
                                             onChangeText={str =>
@@ -777,7 +764,7 @@ export class Main extends Component {
                                     <Item stackedLabel>
                                         <Label>ผลที่เกิดขึ้น<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <Textarea
-                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5, minWidth: '100%', maxWidth: '100%' }}
                                             rowSpan={4}
                                             value={Geo_map_result_description}
                                             onChangeText={str =>
@@ -793,7 +780,7 @@ export class Main extends Component {
                                         <Label>คำอธิบาย<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
 
                                         <Textarea
-                                            style={{ backgroundColor: "#ffffff", borderRadius: 5 }}
+                                            style={{ backgroundColor: "#ffffff", borderRadius: 5, minWidth: '100%', maxWidth: '100%' }}
                                             rowSpan={4}
                                             value={Geo_map_description}
                                             onChangeText={str =>
@@ -843,40 +830,40 @@ export class Main extends Component {
                             </View>
                         </Content>
                     ) : (
-                                // แสดงแผนที่ หน้าหลัก
-                                <MapView
-                                    onPress={this.onMapPress.bind(this)}
-                                    style={mstyle.map}
-                                    zoomEnabled={true}
-                                    toolbarEnabled={true}
-                                    showsUserLocation={true}
-                                    showsScale={true}
-                                    zoomTapEnabled={true}
-                                    zoomControlEnabled={true}
-                                    {...this.getgeolocation}
-                                >
-                                    <Marker
-                                        coordinate={{
-                                            latitude: this.state.position.lat,
-                                            longitude: this.state.position.lng,
-                                        }}>
+                        // แสดงแผนที่ หน้าหลัก
+                        <MapView
+                            onPress={this.onMapPress.bind(this)}
+                            style={mstyle.map}
+                            zoomEnabled={true}
+                            toolbarEnabled={true}
+                            showsUserLocation={true}
+                            showsScale={true}
+                            zoomTapEnabled={true}
+                            zoomControlEnabled={true}
+                            {...this.getgeolocation}
+                        >
+                            <Marker
+                                coordinate={{
+                                    latitude: this.state.position.lat,
+                                    longitude: this.state.position.lng,
+                                }}>
 
 
-                                    </Marker>
+                            </Marker>
 
 
-                                    {this.state.listshowMarker}
-                                    {!isEmptyValue(this.state.marker) &&
-                                        <View style={_stylesMap.card}>
-                                            <Text></Text>
-                                        </View>
-                                    }
-                                </MapView>
+                            {this.state.listshowMarker}
+                            {!isEmptyValue(this.state.marker) &&
+                                <View style={_stylesMap.card}>
+                                    <Text></Text>
+                                </View>
+                            }
+                        </MapView>
 
-                            )
+                    )
                 ) : (
-                        <View></View>
-                    )}
+                    <View></View>
+                )}
 
 
 

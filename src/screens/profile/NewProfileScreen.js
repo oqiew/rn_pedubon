@@ -14,7 +14,7 @@ import { isEmptyValue, isEmptyValues } from '../../components/Methods';
 import DatePicker from 'react-native-datepicker'
 import PDHeader from '../../components/header';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../../Database/constan';
+import { TableName } from '../../database/constan';
 import { ScrollView } from 'react-native-gesture-handler';
 
 
@@ -295,10 +295,12 @@ export class NewProfileScreen extends Component {
                                     <Item fixedLabel style={{ marginTop: 5 }}>
                                         <Label>เพศ<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <Picker
+                                            mode="dropdown"
+                                            placeholder="เลือกเพศ"
+                                            iosIcon={<Icon name="down" type="AntDesign"></Icon>}
                                             style={{ left: -56 }}
                                             selectedValue={Sex}
                                             onValueChange={str => this.setState({ Sex: str })}>
-                                            <Picker.Item label="เลือกเพศ" value="" />
                                             <Picker.Item label="ชาย" value="ชาย" />
                                             <Picker.Item label="หญิง" value="หญิง" />
                                             <Picker.Item label="อื่นๆ" value="อื่นๆ" />
@@ -368,10 +370,12 @@ export class NewProfileScreen extends Component {
                                     <Item fixedLabel style={{ marginTop: 5 }}>
                                         <Label>รูปแบบ อปท<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                                         <Picker
+                                            mode="dropdown"
+                                            placeholder="เลือกรูปแบบ อปท"
+                                            iosIcon={<Icon name="down" type="AntDesign"></Icon>}
                                             style={{ left: -56 }}
                                             selectedValue={dominance}
                                             onValueChange={str => this.onChangeDominance(str)}>
-                                            <Picker.Item label="เลือกรูปแบบ อปท" value="" />
                                             <Picker.Item label="องค์การบริหารส่วนจังหวัด" value="องค์การบริหารส่วนจังหวัด" />
                                             <Picker.Item label="เทศบาลนคร" value="เทศบาลนคร" />
                                             <Picker.Item label="เทศบาลเมือง" value="เทศบาลเมือง" />

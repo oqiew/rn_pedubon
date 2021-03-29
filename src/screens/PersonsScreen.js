@@ -3,13 +3,13 @@ import { View, TouchableOpacity, Image } from 'react-native';
 import styles from '../styles/main.styles';
 import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
-import { Container, Content, Item, Label, Input, Icon, Button, Text } from 'native-base';
+import { Container, Content, Item, Label, Input, Icon, Button, Text, Alert } from 'native-base';
 import { isEmptyValue } from '../components/Methods';
 import Firebase from '../Firebase';
 import firestore from '@react-native-firebase/firestore';
 import themeStyle from '../styles/theme.style';
 import { routeName } from '../routes/RouteConstant';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import Loading from '../components/Loading';
 import PDHeader from '../components/header';
 export class PersonsScreen extends Component {
@@ -117,7 +117,7 @@ export class PersonsScreen extends Component {
             HCareer, Geo_map_description, Area_ID, edit_ID, Name, uid } = this.state;
         if (HName === '' || HLastname === '' || HAddress === '' || HAge === '' ||
             HCareer === '' || Geo_map_description === '') {
-            alert('กรุณากรอกข้อมูลให้ครบ');
+            Alert.alert('กรุณากรอกข้อมูลให้ครบ');
             this.setState({
                 loading: false
             })
@@ -147,7 +147,7 @@ export class PersonsScreen extends Component {
                     loading: false
                 })
             }).catch((error) => {
-                alert('บันทึกข้อมูลสำเร็จ');
+                Alert.alert('บันทึกข้อมูลสำเร็จ');
                 this.setState({
                     loading: false
                 })
@@ -207,36 +207,43 @@ export class PersonsScreen extends Component {
                                 <Item fixedLabel >
                                     <Label>ชื่อจริง<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input value={HName}
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         placeholder="ชื่อจริง"
                                         onChangeText={str => this.setState({ HName: str })} />
                                 </Item>
                                 <Item fixedLabel >
                                     <Label>นามสกุล<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input rowSpan={4} value={HLastname}
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         placeholder="ชื่อจริง"
                                         onChangeText={str => this.setState({ HLastname: str })} />
                                 </Item>
                                 <Item fixedLabel >
                                     <Label>ที่อยู่<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input rowSpan={4} value={HAddress}
-
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         onChangeText={str => this.setState({ HAddress: str })} placeholder="บ้านเลขที่ หมู่บ้าน" />
                                 </Item>
                                 <Item fixedLabel >
                                     <Label>อายุ<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input value={HAge} keyboardType='numeric'
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         placeholder="อายุ"
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         onChangeText={str => this.setState({ HAge: str })} />
                                 </Item>
                                 <Item fixedLabel >
                                     <Label>อาชีพ<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input value={HCareer}
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         placeholder="อาชีพ"
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         onChangeText={str => this.setState({ HCareer: str })} />
                                 </Item>
                                 <Item fixedLabel >
                                     <Label>บทบาท<Text style={{ color: 'red' }}>*</Text> :</Label>
                                     <Input value={Geo_map_description}
+                                        style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                         onChangeText={str => this.setState({ Geo_map_description: str })} placeholder="บทบาท ความสัมพันธ์ ในชุมชน" />
                                 </Item>
                                 <View style={{ flexDirection: 'row' }}>

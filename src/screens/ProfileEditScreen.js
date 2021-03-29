@@ -7,7 +7,7 @@ import { connect } from 'react-redux';
 import { fetch_user } from '../actions';
 import PDHeader from '../components/header';
 import Loading from '../components/Loading';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import firestore from '@react-native-firebase/firestore';
@@ -195,10 +195,12 @@ export class ProfileEditScreen extends Component {
                         <Item fixedLabel style={{ marginTop: 5 }}>
                             <Label>เพศ<Text style={{ color: themeStyle.Color_red }}>*</Text> :</Label>
                             <Picker
+                                mode="dropdown"
+                                placeholder="เลือกเพศ"
+                                iosIcon={<Icon name="down" type="AntDesign"></Icon>}
                                 style={{ left: -56 }}
                                 selectedValue={Sex}
                                 onValueChange={str => this.setState({ Sex: str })}>
-                                <Picker.Item label="เลือกเพศ" value="" />
                                 <Picker.Item label="ชาย" value="ชาย" />
                                 <Picker.Item label="หญิง" value="หญิง" />
                                 <Picker.Item label="อื่นๆ" value="อื่นๆ" />

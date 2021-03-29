@@ -6,7 +6,7 @@ import data_provinces from '../data/provinces.json'
 import Loading from '../components/Loading';
 import firestore from '@react-native-firebase/firestore';
 import { routeName } from '../routes/RouteConstant';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import themeStyle from '../styles/theme.style';
 import PDHeader from '../components/header';
 export class ListUserScreen extends Component {

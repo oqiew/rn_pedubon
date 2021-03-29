@@ -8,7 +8,7 @@ import styles from '../styles/main.styles';
 import MapView, { PROVIDER_GOOGLE, Marker } from 'react-native-maps';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import PDHeader from '../components/header';
 import themeStyle from '../styles/theme.style';
@@ -110,8 +110,8 @@ export class MapsScreen extends Component {
                                     source={require('../assets/accident.png')}
                                     style={{ height: 35, width: 35 }}></Image>
                             ) : (
-                                                        <View></View>
-                                                    )}
+                                <View></View>
+                            )}
                         </View>
                     </Marker>,
                 );
@@ -127,7 +127,7 @@ export class MapsScreen extends Component {
         });
     };
     onBack = () => {
-        this.props.navigation.navogate(routeName.Main)
+        this.props.navigation.navigate(routeName.Main)
     }
     render() {
         const mstyle = StyleSheet.create({

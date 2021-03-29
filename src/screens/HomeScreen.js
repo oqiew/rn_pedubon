@@ -5,14 +5,10 @@ import Loading from '../components/Loading';
 import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import styles from '../styles/main.styles';
-import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
 import { routeName } from '../routes/RouteConstant';
-import { TableName } from '../Database/constan';
-
-
-
+import { TableName } from '../database/constan';
 
 class HomeScreen extends Component {
     constructor(props) {

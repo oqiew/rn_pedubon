@@ -7,8 +7,9 @@ import { connect } from 'react-redux';
 import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { isEmptyValue } from '../components/Methods';
+import mainStyles from '../styles/main.styles';
 
 export class MainScreen extends Component {
     constructor(props) {
@@ -32,7 +33,7 @@ export class MainScreen extends Component {
     render() {
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
-                <Content contentContainerStyle={{ padding: 15 }}>
+                <Content contentContainerStyle={mainStyles.background}>
                     <Text style={{ textAlign: 'center', fontSize: 24 }}>
                         {this.state.area_name}</Text>
                     <Text style={{ textAlign: 'center', fontSize: 24, color: '#01aeae' }}>

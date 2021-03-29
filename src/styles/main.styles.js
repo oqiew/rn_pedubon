@@ -8,6 +8,11 @@ export default StyleSheet.create({
         alignContent: 'center',
         margin: 20,
     },
+    background: {
+        padding: 15,
+        backgroundColor: '#f0f2f5',
+        minHeight: '100%'
+    },
     content: {
         flex:
             1,

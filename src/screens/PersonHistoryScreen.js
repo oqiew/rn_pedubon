@@ -7,7 +7,7 @@ import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import Loading from '../components/Loading';
@@ -277,16 +277,18 @@ export class PersonHistoryScreen extends Component {
                         <Item fixedLabel >
                             <Label>ชื่อเหตุการณ์ :</Label>
                             <Input value={Name_activity}
+                                style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                 onChangeText={str => this.setState({ Name_activity: str })} placeholder="ชื่อหัวข้อ เหตุการณ์ หรือกิจกรรม" />
                         </Item>
                         <Item stackedLabel >
                             <Label>คำอธิบาย :</Label>
-                            <Textarea rowSpan={4} value={Description} style={{ fontSize: 16 }}
+                            <Textarea rowSpan={4} value={Description} style={{ backgroundColor: '#ffffff', borderRadius: 5, fontSize: 16, minWidth: '100%', maxWidth: '100%' }}
                                 onChangeText={str => this.setState({ Description: str })} placeholder="คำอธิบาย เหตุการณ์ หรือกิจกรรมที่เกิดขึ้นกับชุมชน" />
                         </Item>
                         <Item fixedLabel >
                             <Label>ปีที่เริ่ม :</Label>
                             <Input value={Year_start} maxLength={4}
+                                style={{ backgroundColor: '#ffffff', borderRadius: 5 }}
                                 keyboardType={"number-pad"}
                                 onChangeText={str => this.setState({ Year_start: str })} placeholder="ปีที่เริ่ม พ.ศ." />
                         </Item>

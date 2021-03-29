@@ -6,7 +6,7 @@ import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import Loading from '../components/Loading';
@@ -262,7 +262,8 @@ export class LocalCalendarScreen extends Component {
 
         return (
             <Container style={{ backgroundColor: themeStyle.background }}>
-                <PDHeader name={'ปฏิทินชุมชน' + selected_ban.Name} backHandler={this.onBack}></PDHeader>
+                {isEmptyValue(selected_ban) ? <PDHeader name={'ปฏิทินชุมชน'} backHandler={this.onBack}></PDHeader>
+                    : <PDHeader name={'ปฏิทินชุมชน' + selected_ban.Name} backHandler={() => this.setState({ selected_ban: '', selected: 1 })}></PDHeader>}
                 <Loading visible={this.state.loading}></Loading>
                 <Content contentContainerStyle={{ padding: 15 }}>
                     {this.state.selected === 1 &&
@@ -342,9 +343,11 @@ export class LocalCalendarScreen extends Component {
                             <Item fixedLabel >
                                 <Label>ประเภท</Label>
                                 <Picker
+                                    mode="dropdown"
+                                    placeholder="เลือกประเภทกิจกรรม"
+                                    iosIcon={<Icon name="down" type="AntDesign"></Icon>}
                                     selectedValue={Type_activity}
                                     onValueChange={str => this.setState({ Type_activity: str })}>
-                                    <Picker.Item key="0" label="เลือกประเภทกิจกรรม" value="" />
                                     <Picker.Item key="1" label="วัฒนธรรมประเพณี" value="วัฒนธรรมประเพณี" />
                                     <Picker.Item key="2" label="เศรษฐกิจ" value="เศรษฐกิจ" />
                                 </Picker>

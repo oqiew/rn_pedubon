@@ -7,7 +7,7 @@ import { fetch_user } from '../actions';
 import { connect } from 'react-redux';
 import { isEmptyValue } from '../components/Methods';
 import firestore from '@react-native-firebase/firestore';
-import { TableName } from '../Database/constan';
+import { TableName } from '../database/constan';
 import { routeName } from '../routes/RouteConstant';
 import themeStyle from '../styles/theme.style';
 import PDHeader from '../components/header';
