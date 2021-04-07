@@ -136,7 +136,7 @@ export class LocalCalendarScreen extends Component {
                     .onSnapshot(this.onCollectionUpdate);
             }
             this.genrateMonth(0, 0);
-            this.tbBans.onSnapshot(this.onListBans)
+            this.tbBans.where('Area_ID', '==', this.state.Area_ID).onSnapshot(this.onListBans)
         }
     }
     genrateMonth(str, d) {
@@ -190,6 +190,7 @@ export class LocalCalendarScreen extends Component {
                         Name_activity, Type_activity
                         , Month1, Month2, Informer_ID: uid, Informer_name: Name
                         , Ban_ID: this.state.selected_ban.ID,
+                        Update_date: Firebase.firestore.Timestamp.now()
                     }).then((docRef) => {
                         this.setState({
                             Name_activity: "", Month1: "", Month2: "", Type_activity: '',
@@ -207,7 +208,9 @@ export class LocalCalendarScreen extends Component {
 
                 } else {
                     this.tbLocalCalendars.add({
-                        Name_activity, Type_activity, Create_date: firestore.Timestamp.now()
+                        Name_activity, Type_activity,
+                        Create_date: firestore.Timestamp.now(),
+                        Update_date: Firebase.firestore.Timestamp.now()
                         , Month1, Month2, Informer_ID: uid, Informer_name: Name
                         , Area_ID, Ban_ID: this.state.selected_ban.ID,
                     }).then((docRef) => {
@@ -283,6 +286,7 @@ export class LocalCalendarScreen extends Component {
                                     <Text style={{ color: "#ffffff", textAlign: "center" }}>{element.Name}</Text>
                                 </TouchableOpacity>
                             )}
+                            {bans.length === 0 && <Text>กรุณาติดต่อพี่เลี้ยงเพื่อเพิ่มชื่อหมู่บ้าน</Text>}
                         </>
                     }
                     {this.state.selected === 2 &&

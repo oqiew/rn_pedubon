@@ -38,7 +38,7 @@ export class NewProfileScreen extends Component {
             Name: '',
             Lastname: '',
             Nickname: '',
-            Sex: '',
+            Sex: 'ชาย',
             Phone_number: '',
             Line_ID: '',
             Facebook: '',

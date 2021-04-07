@@ -35,6 +35,8 @@
 			</dict>
 		</dict>
 	</dict>
+		<key>NSCameraUsageDescription</key>
+	<string>$(PRODUCT_NAME) PEDUbon จำเป็นต้องขอนุญาตเข้าถึงกล้องถ่ายรูป เพื่อใช้ในการถ่ายรูปข้อมูล</string>
 	<key>NSLocationAlwaysUsageDescription</key>
 	<string>$(PRODUCT_NAME) PEDUbon จำเป็นต้องขอนุญาตเข้าถึงตำแหน่งของคุณเพื่อใช้ในการระบุตำแหน่งข้อมูลพื้นที่ ข้อมูลชุมชน ที่คุณจะเก็บข้อมูลพื้นที่ของคุณเอง</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

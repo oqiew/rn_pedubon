@@ -376,7 +376,6 @@ export class Main extends Component {
             new_id = Map_image_name;
         } else {
             new_id = Date.now().toString();
-
         }
         if (this.state.new_upload_image) {
             temp_Map_image_URL = await this.uploadImage(new_id)
@@ -727,11 +726,8 @@ export class Main extends Component {
                                                 <Radio selected={Important} ></Radio>
                                                 <Text>เพิ่ม</Text>
                                             </TouchableOpacity>
-
                                         </View>
-
                                     </Item>
-
                                 }
                                 {(Geo_map_type === 'flag_danger' || Geo_map_type === 'flag_good') &&
 

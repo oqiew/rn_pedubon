@@ -31,7 +31,7 @@ export class AddBanScreen extends Component {
     }
     componentDidMount() {
         this.queryarea()
-        this.tbBans.onSnapshot(this.onListBans)
+        this.tbBans.where('Area_ID', '==', this.state.Area_ID).onSnapshot(this.onListBans)
     }
     onListBans = (query) => {
         const bans = [];
@@ -143,9 +143,10 @@ export class AddBanScreen extends Component {
                     {status === 'start' &&
                         <View>
                             <View style={{ marginTop: 10, justifyContent: 'center', flex: 1, flexDirection: 'row' }}>
-                                <Button primary onPress={this._onAdd}>
+
+                                {(User_type === 'พี่เลี้ยง' || Role === 'admin') && <Button primary onPress={this._onAdd}>
                                     <Text style={{ fontSize: 26 }}>เพิ่ม</Text>
-                                </Button>
+                                </Button>}
                             </View>
                         </View>
                     }
@@ -167,7 +168,7 @@ export class AddBanScreen extends Component {
                     }
                     <View style={{ borderBottomWidth: 1, margin: 10 }}></View>
                     <ScrollView style={{ marginTop: 10 }}>
-                        {(User_type === 'พี่เลี้ยง' && Role === 'admin') ? this.state.bans.map((element, i) =>
+                        {(User_type === 'พี่เลี้ยง' || Role === 'admin') ? this.state.bans.map((element, i) =>
                             <TouchableOpacity key={i} style={{
                                 flexDirection: "row", borderColor: '#ff9dce', borderWidth: 1,
                                 margin: 5, padding: 5, borderRadius: 5,
@@ -202,7 +203,7 @@ export class AddBanScreen extends Component {
 
                                         </Col>
                                         <Col>
-                                            <Text style={{ textAlign: 'right', color: '' }}>เลือก</Text>
+
                                         </Col>
                                     </Row>
                                 </TouchableOpacity>

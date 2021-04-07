@@ -73,7 +73,7 @@ export class LocalHistoryScreen extends Component {
                     .where('Ban_ID', '==', this.state.selected_ban.ID)
                     .onSnapshot(this.onCollectionUpdate);
             }
-            this.tbBans.onSnapshot(this.onListBans)
+            this.tbBans.where('Area_ID', '==', this.state.Area_ID).onSnapshot(this.onListBans)
         }
     }
     delete(id) {
@@ -278,6 +278,7 @@ export class LocalHistoryScreen extends Component {
                                 <Text style={{ color: "#ffffff", textAlign: "center" }}>{element.Name}</Text>
                             </TouchableOpacity>
                         )}
+                        {bans.length === 0 && <Text>กรุณาติดต่อพี่เลี้ยงเพื่อเพิ่มชื่อหมู่บ้าน</Text>}
                     </Content>
                 }
                 {this.state.selected === 2 &&

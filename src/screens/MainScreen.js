@@ -96,7 +96,7 @@ export class MainScreen extends Component {
                     </Text>
                             </TouchableOpacity>
 
-                            {!isEmptyValue(this.state.Role) && this.state.Role === 'admin' && <TouchableOpacity
+                            <TouchableOpacity
                                 style={{ alignItems: 'center', padding: 10, height: 120 }}
                                 onPress={() => this.props.navigation.navigate(routeName.AddBan)}
                             >
@@ -106,7 +106,7 @@ export class MainScreen extends Component {
                                 <Text style={{ fontSize: 16, textAlign: 'center' }}>
                                     เพิ่มหมู่บ้าน{'\n'}
                                 </Text>
-                            </TouchableOpacity>}
+                            </TouchableOpacity>
                         </Col>
                     </Grid>
                 </Content>

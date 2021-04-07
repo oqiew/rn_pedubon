@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "android": "react-native run-android",
+    "build android": "cd android &&gradlew bundleRelease && cd..",
     "android_debug": "adb shell input keyevent 82",
     "ios": "react-native run-ios",
     "start": "react-native start",
